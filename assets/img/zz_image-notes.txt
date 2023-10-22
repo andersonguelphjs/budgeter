@@ -1,0 +1,51 @@
+
+//resize a folder of images
+cd /path/to/your/images
+mkdir resized
+for file in *.jpg; do sips -Z 128 "$file" --out resized/"$file"; done
+for file in *.png; do sips -Z 64 "$file" --out resized/"$file"; done
+
+//this will ensure that the longest side of the image will be 128 and the other dimension will resize to maintain the original aspect ratio.
+mkdir -p resized
+for file in *.png; do
+    convert "$file" -resize "128x128" "resized/$file"
+done
+
+cd resized
+mkdir -p square
+for file in *.png; do
+    convert "$file" -background none -gravity center -extent 128x128 "square/$file"
+done
+
+//create a sprite sheet 
+
+brew install imagemagick
+cd /path/to/your/images
+montage *.png -geometry +0+0 -tile 3x -background none splat_sprite_sheet.png
+montage *.png -geometry +0+0 -tile 3x -background none generic_items_colored_sprite_sheet.png
+*.png: This selects all PNG files in the current directory.
+-geometry +0+0: spacing between the images (0 pixels in this case).
+-tile 3x: the number of columns in the sprite sheet 
+-background none: This preserves transparency in the PNG images.
+sprite_sheet.png: This is the output file name for the sprite sheet.
+
+//change image format
+sips -s format png image.jpg --out image.png
+
+//rotate image
+sips --rotate 90 image.jpg
+
+//flip image
+sips --flip horizontal image.jpg
+sips --flip vertical image.jpg
+
+//extract info
+sips -g all image.jpg
+
+//geernal batch
+for file in *.jpg; do sips -Z 640 "$file"; done
+
+mkdir -p /svg
+for file in *.png; do
+   convert "$file" "${file%.png}.svg"
+done
