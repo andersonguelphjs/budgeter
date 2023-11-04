@@ -1,8 +1,8 @@
 export const IntervalSchema = [
     { name: "id", type: "INTEGER PRIMARY KEY AUTOINCREMENT" },
-    { name: "startTime", type: "TEXT" }, // storing time as text in 'HH:mm' format
-    { name: "endTime", type: "TEXT" },   // same as above
-    // ... you can expand this schema with more fields if necessary
+    { name: "startTime", type: "TEXT" }, 
+    { name: "endTime", type: "TEXT" },  
+
   ];
 
   export default class Interval {

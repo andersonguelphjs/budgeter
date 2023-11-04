@@ -1,9 +1,9 @@
-import Category from "./Category"; // assuming DayData is relevant to your finance app
+import HourlyIncome from "./HourlyIncome"; // assuming DayData is relevant to your finance app
 export const FinanceSchema = [
   { name: "id", type: "INTEGER PRIMARY KEY AUTOINCREMENT" },
   { name: "date", type: "TEXT" },
   { name: "type", type: "TEXT" }, // income or expense
-  { name: "category", type: "TEXT" }, // e.g., salary, bonus, food, transport, etc.
+  { name: "HourlyIncome", type: "TEXT" }, // e.g., salary, bonus, food, transport, etc.
   { name: "amount", type: "REAL" }, // for the sake of simplicity, we store money as a float
   { name: "currency", type: "TEXT" },
   { name: "description", type: "TEXT" }, // additional details about the expense or income
@@ -15,11 +15,11 @@ export default class FinanceData {
     this._id = config.id || null;
     this._date = config.date || "";
     this._type = config.type || ""; // income or expense
-    this._category = config.category || "";
+    this._HourlyIncome = config.HourlyIncome || "";
     this._amount = config.amount || 0.0;
     this._currency = config.currency || "";
     this._description = config.description || "";
-    this._history_data = config.history_data || [new Category()];
+    this._history_data = config.history_data || [new HourlyIncome()];
   }
 
   // ... getter and setter methods for each property
@@ -29,7 +29,7 @@ export default class FinanceData {
       id: this.id,
       date: this.date,
       type: this.type,
-      category: this.category,
+      HourlyIncome: this.HourlyIncome,
       amount: this.amount,
       currency: this.currency,
       description: this.description,
@@ -43,7 +43,7 @@ export default class FinanceData {
       id: data.id,
       date: data.date,
       type: data.type,
-      category: data.category,
+      HourlyIncome: data.HourlyIncome,
       amount: data.amount,
       currency: data.currency,
       description: data.description,
@@ -56,7 +56,7 @@ export default class FinanceData {
 // import FinanceData from './FinanceData';
 
 // const financeEntry = new FinanceData({...});
-// console.log(financeEntry.category);
+// console.log(financeEntry.HourlyIncome);
 // console.log(financeEntry.amount);
 // ...
 //   // Convert FinanceData to JSON string
@@ -65,6 +65,6 @@ export default class FinanceData {
 
 //   // Convert JSON string back to FinanceData object
 //   const retrievedEntry = FinanceData.fromJSON(json);
-//   console.log(retrievedEntry.category);
+//   console.log(retrievedEntry.HourlyIncome);
 //   console.log(retrievedEntry.amount);
 // ...

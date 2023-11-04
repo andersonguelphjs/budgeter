@@ -5,26 +5,20 @@ import { useContext, useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { NavigationContainer } from "@react-navigation/native";
 import BottomTabNavigator from "../../navigation/BottomTabNavigator";
-
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 const Root = () => {
-  const [isTryingLogin, setIsTryingLogin] = useState(true);
-  const ctx = useContext(AppContext);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchToken() {
-      const storedToken = await AsyncStorage.getItem("token");
-
-      if (storedToken) {
-        ctx.authenticate(storedToken);
-      }
-
-      setIsTryingLogin(false);
+    async function prepare() {
+       setIsLoading(false);
     }
 
-    fetchToken();
+    prepare();
   }, []);
 
-  if (isTryingLogin) {
+  if (isLoading) {
     SplashScreen.preventAutoHideAsync();
     return null;
   }

@@ -1,0 +1,38 @@
+[
+    {
+        "type": "income",
+        "description": "tip",
+        "color": "#FF5733",
+        "amount": 0,
+        "translation_key": ""
+    },
+    {
+        "type": "income",
+        "description": "govt",
+        "color": "#33FF57",
+        "amount": 0,
+        "translation_key": ""
+    },
+    {
+        "type": "income",
+        "description": "tax rebate",
+        "color": "#33AAFF",
+        "amount": 0,
+        "translation_key": ""
+    },
+    {
+        "type": "income",
+        "description": "translation",
+        "color": "#AA33FF",
+        "amount": 0,
+        "translation_key": ""
+    },
+    {
+        "type": "income",
+        "description": "gift",
+        "color": "#FFAA33",
+        "amount": 0,
+        "translation_key": ""
+    }
+
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "type": "expense",
+    "description": "housing",
+    "color": "#FF5733",
+    "amount": 0,
+    "translation_key": "housing_expense"
+  },
+  {
+    "type": "expense",
+    "description": "utility",
+    "color": "#33FF57",
+    "amount": 0,
+    "translation_key": "utility_costs"
+  },
+  {
+    "type": "expense",
+    "description": "foods",
+    "color": "#33AAFF",
+    "amount": 0,
+    "translation_key": "food_expenses"
+  },
+  {
+    "type": "expense",
+    "description": "transportation",
+    "color": "#AA33FF",
+    "amount": 0,
+    "translation_key": "transportation_expenses"
+  },
+  {
+    "type": "expense",
+    "description": "phone",
+    "color": "#FFAA33",
+    "amount": 0,
+    "translation_key": "phone_bill"
+  },
+  {
+    "type": "expense",
+    "description": "entertainment",
+    "color": "#33FFAA",
+    "amount": 0,
+    "translation_key": "entertainment_expenses"
+  },
+  {
+    "type": "expense",
+    "description": "miscellaneous",
+    "color": "#5733FF",
+    "amount": 0,
+    "translation_key": "miscellaneous_expense"
+  }
+]

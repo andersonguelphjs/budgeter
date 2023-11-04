@@ -1,0 +1,17 @@
+[
+    {
+        "type": "income",
+        "description": "cafe",
+        "color": "#FF5733",
+        "rate": 0,
+        "translation_key": "cafe"
+    },
+    {
+        "type": "income",
+        "description": "uniqlo",
+        "color": "#33FF57",
+        "rate": 0,
+        "translation_key": "uniqlo"
+    }
+
+]

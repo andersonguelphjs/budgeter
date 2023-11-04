@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import * as SQLite from "expo-sqlite";
 
 const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
-  
   const db = SQLite.openDatabase(`${table}_database.db`);
 
   useEffect(() => {
@@ -41,7 +40,6 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
   };
 
   const addMissingFieldsToTable = async () => {
-
     const result = await new Promise((resolve, reject) => {
       db.transaction(
         (tx) => {
@@ -106,11 +104,11 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
         db.transaction((tx) => {
           // Prepare the SQL query
           const query = `SELECT * FROM ${table} WHERE id = ?`;
-  
+
           // Execute the SQL query
           tx.executeSql(
             query,
-            [id],  // This array holds any parameters for the query
+            [id], // This array holds any parameters for the query
             (_, result) => {
               // If the query was successful, we expect the result in result.rows._array (if using 'expo-sqlite')
               const rows = result.rows;
@@ -124,22 +122,69 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
             },
             (_, error) => {
               // If there was an issue with the transaction, we don't proceed and report back with the error
-              console.log(`Error fetching row from ${table} with ID ${id}: `, error);
+              console.log(
+                `Error fetching row from ${table} with ID ${id}: `,
+                error
+              );
               reject(error); // reject the promise with the error
             }
           );
         });
       });
-  
+
       return rowData; // rowData will be either an object of the row data, null if no data, or undefined if an error occurred
     } catch (error) {
       console.log(`Error fetching row from ${table} with ID ${id}: `, error);
       // handle error appropriately, maybe throw the error or return an appropriate value
     }
   };
-  
+  const getRowByField = async (key, value) => {
+    console.log(`Fetch row from ${table} where ${key} = ${value}`);
+    try {
+      // We're using a Promise to handle the asynchronous nature of the transaction
+      const rowData = await new Promise((resolve, reject) => {
+        db.transaction((tx) => {
+          // Prepare the SQL query
+          const query = `SELECT * FROM ${table} WHERE ${key} = ?`;
+
+          // Execute the SQL query
+          tx.executeSql(
+            query,
+            [value], // This array holds any parameters for the query
+            (_, result) => {
+              // If the query was successful, we expect the result in result.rows._array (if using 'expo-sqlite')
+              const rows = result.rows;
+              if (rows.length > 0) {
+                console.log(`Row data for ${key} = ${value}: `, rows._array[0]); // log the first row data
+                resolve(rows._array[0]); // resolve the promise with the row data
+              } else {
+                console.log(`No row found for ${key} = ${value}`);
+                resolve(null); // resolve the promise with null to indicate no data found
+              }
+            },
+            (_, error) => {
+              // If there was an issue with the transaction, we don't proceed and report back with the error
+              console.log(
+                `Error fetching row from ${table} where ${key} = ${value}: `,
+                error
+              );
+              reject(error); // reject the promise with the error
+            }
+          );
+        });
+      });
+
+      return rowData; // rowData will be either an object of the row data, null if no data, or undefined if an error occurred
+    } catch (error) {
+      console.log(`Error fetching row from ${table} where ${key} = ${value}: `, error);
+      // handle error appropriately, maybe throw the error or return an appropriate value
+    }
+};
+
   const createNewRow = async (initialValues) => {
-    console.log(`Creating new row for ${table} with initial values ${initialValues}`);
+    console.log(
+      `Creating new row for ${table} with initial values ${initialValues}`
+    );
     try {
       const result = await new Promise((resolve, reject) => {
         db.transaction((tx) => {
@@ -149,7 +194,7 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
             .join(", ");
           const values = Object.values(initialValues);
           const query = `INSERT INTO ${table} (${fields}) VALUES (${placeholders})`;
-
+          console.log("query:", query);
           tx.executeSql(
             query,
             values,
@@ -158,6 +203,7 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
               resolve(insertId);
             },
             (_, error) => {
+              console.log("Error inserting row in ${table}, error:", error);
               reject(error);
             }
           );
@@ -170,7 +216,7 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
   };
 
   const updateRow = async (id, newData) => {
-    console.log(`Update row in ${table} with ID: ${id}`);
+    console.log(`Update row in ${table} with ID: ${id}, new data: ${newData}`);
     try {
       const result = await new Promise((resolve, reject) => {
         db.transaction((tx) => {
@@ -272,15 +318,141 @@ const useSQLLiteDatabase = ({ table, desiredSchema = [] }) => {
       console.log(`Error deleting all rows in ${table}:`, error);
     }
   };
+  // ... (rest of your existing hook code)
 
+  const getRowCount = async () => {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.transaction((tx) => {
+          tx.executeSql(
+            `SELECT COUNT(*) as count FROM ${table}`,
+            [],
+            (_, { rows }) => {
+              const count = rows.item(0).count; // Should give us the count
+              resolve(count);
+            },
+            (_, error) => {
+              reject(error);
+            }
+          );
+        });
+      });
+    } catch (error) {
+      console.log(`Error getting row count in ${table}:`, error);
+      return -1; // or any other indication of failure
+    }
+  };
+
+  const deleteField = async (columnName) => {
+    try {
+      // SQLite doesn't support the DROP COLUMN syntax.
+      // We need to create a new table and copy the data into it.
+
+      // 1. Start a transaction
+      await new Promise((resolve, reject) => {
+        db.transaction(
+          (tx) => {
+            // 2. Create a new table with the desired structure without the unwanted column.
+            // tx.executeSql(/* SQL for creating new table without 'columnName' */, [], null, (_, error) => reject(error));
+            // // 3. Copy data from the old table to the new table, excluding the unwanted column.
+            // tx.executeSql(/* SQL for copying data */, [], null, (_, error) => reject(error));
+            // // 4. Delete the old table.
+            // tx.executeSql(`DROP TABLE ${table}`, [], null, (_, error) => reject(error));
+            // // 5. Rename the new table to the old table's name.
+            // tx.executeSql(/* SQL for renaming table */, [], null, (_, error) => reject(error));
+          },
+          (error) => {
+            // transaction error callback
+            reject(error);
+          },
+          () => {
+            // transaction success callback
+            resolve();
+          }
+        );
+      });
+    } catch (error) {
+      console.log(`Error deleting column in ${table}:`, error);
+    }
+  };
+
+  const getSchema = async () => {
+    try {
+      return await new Promise((resolve, reject) => {
+        db.transaction((tx) => {
+          tx.executeSql(
+            `PRAGMA table_info(${table})`, // This SQLite PRAGMA statement retrieves the schema
+            [],
+            (_, { rows }) => {
+              const schema = rows._array.map((column) => ({
+                name: column.name,
+                type: column.type,
+                // Add other properties here if needed
+              }));
+              resolve(schema);
+            },
+            (_, error) => {
+              reject(error);
+            }
+          );
+        });
+      });
+    } catch (error) {
+      console.log(`Error getting schema of ${table}:`, error);
+      return []; // or any other indication of failure
+    }
+  };
+
+  const reinitializeDb = async () => {
+    try {
+      // Step 1: Drop the existing table
+      await new Promise((resolve, reject) => {
+        db.transaction((tx) => {
+          tx.executeSql(
+            `DROP TABLE IF EXISTS ${table}`,
+            [],
+            (_, result) => {
+              console.log(`${table} table dropped successfully.`);
+              resolve(result);
+            },
+            (_, error) => {
+              console.error(`Error dropping ${table} table:`, error);
+              reject(error);
+            }
+          );
+        });
+      });
+
+      // Step 2: Recreate the table
+      // You might want to ensure that your 'initializeDatabase' function
+      // is robust enough to accurately create the table based on a provided schema.
+      const initResponse = await initializeDatabase();
+      console.log(`Database reinitialized.`, initResponse);
+
+      // (Optional) Step 3: Re-add any default or initial data needed for your app.
+      // This step will depend on your application's requirements.
+    } catch (error) {
+      console.error(`Error reinitializing database:`, error);
+      // Handle or throw error as appropriate
+    }
+  };
+
+  const sql_table = {
+    getFirstRow: getFirstRow,
+    getRowById:getRowById,
+    getRowByField: getRowByField,
+    createNewRow:createNewRow,
+    updateRow:updateRow,
+    deleteRow:deleteRow,
+    getAllRows:getAllRows,
+    deleteAllRows:deleteAllRows,
+    getRowCount:getRowCount,
+    deleteField:deleteField,
+    getSchema:getSchema,
+    reinitializeDb:reinitializeDb,
+  }
   return {
-    getFirstRow,
-    getRowById,
-    createNewRow,
-    updateRow,
-    deleteRow,
-    getAllRows,
-    deleteAllRows,
+    sql_table
   };
 };
 

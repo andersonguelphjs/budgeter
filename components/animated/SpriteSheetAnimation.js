@@ -15,11 +15,11 @@ export default function SpriteSheetAnimation({
   const framesPerRow = Math.floor(totalWidth / frameWidth);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const interval_id = setInterval(() => {
       currentFrame.value = (currentFrame.value + 1) % totalFrames;
     }, duration);
 
-    return () => clearInterval(intervalId);
+    return () => clearInterval(interval_id);
   }, [currentFrame, totalFrames, duration]);
 
   const animatedStyle = useAnimatedStyle(() => {

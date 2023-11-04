@@ -1,0 +1,36 @@
+Object {
+    "amount": 0,
+    "HourlyIncome_id": 1,
+    "color": "hsl(145, 100%, 50%)",
+    "date": "2023-10-17",
+    "id": 1,
+    "interval_id": 4,
+    "note": "",
+    "selected_color": "hsl(145, 100%, 50%)",
+    "timestamp": 1697500800000,
+    "type": "income",
+  },
+
+  Object {
+  "2023-10-17": Object {
+    "dots": Array [
+      Object {
+        "amount": 0,
+        "HourlyIncomeId": 1,
+        "color": "hsl(145, 100%, 50%)",
+        "day": Object {
+          "dateString": "2023-10-17",
+          "day": 17,
+          "month": 10,
+          "timestamp": 1697500800000,
+          "year": 2023,
+        },
+        "interval_id": 4,
+        "key": "1697500800000_1_4",
+        "note": "",
+        "type": "income",
+      },
+    ],
+    "selected": true,
+  },
+}

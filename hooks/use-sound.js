@@ -6,7 +6,6 @@ const useSoundPlayer = (audioPaths = defaultSounds) => {
   const [sound, setSound] = useState();
   const generateRandomNumber = (max) => Math.floor(Math.random() * max)
   const playSound = async (index) => {
-    console.log("Loading Sound", index, audioPaths.length);
     const { sound } = await Audio.Sound.createAsync(
       (index && audioPaths[index - 1]) ||
         audioPaths[generateRandomNumber(audioPaths.length)]
@@ -18,7 +17,7 @@ const useSoundPlayer = (audioPaths = defaultSounds) => {
   useEffect(() => {
     return sound
       ? () => {
-          console.log("Unloading Sound");
+          // console.log("Unloading Sound");
           sound.unloadAsync();
         }
       : undefined;

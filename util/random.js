@@ -29,6 +29,16 @@ const componentToHex = (c) => {
 
 // Helper function to clamp a value between a minimum and maximum
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+export const randomRoundedBetween = (x, y, z)=> {
+  // Generate a random number between x and y
+  let randomNumber = x + Math.random() * (y - x);
+
+  // Round the number to the nearest z and ensure it's an integer
+  return Math.round(randomNumber / z) * z;
+}
+
+// Example Usage
+console.log(randomRoundedBetween(10, 50, 5));  // This might return 15, 20, 25,... or 50
 
 export const getRandomNumber = (min = 0, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
