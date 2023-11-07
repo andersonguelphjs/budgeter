@@ -21,13 +21,9 @@ import MonthTable from "../components/MonthTable/MonthTable";
 import ExpenseIncomeSwitch from "../components/ExpenseIncomeSwitch/ExpenseIncomeSwitch";
 import ButtonSwitch from "../components/ui/ButtonSwitch";
 import { getFilteredMarkedDates } from "../util/budgeter_util";
-const CalendarOutScreen = () => {
+const MonthlySummaryScreen = () => {
   const [selectedType, setSelectedType] = useState("income");
   const [markedDates, setMarkedDates] = useState({});
-  // const [HourlyIncome, setHourlyIncome] = useState(null);
-  // const [interval, setInterval] = useState(null);
-  // const [amount, setAmount] = useState(0);
-  // const [note, setNote] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(1);
   const buttons = [
     {
@@ -47,10 +43,18 @@ const CalendarOutScreen = () => {
   ];
   // Retrieving hourlyIncomes and intervals from context
   const ctx = useContext(AppContext);
-  const { intervals, events, categories } = ctx.state;
-
-  const { state, dispatch, playSoundFile, tables } = ctx;
-  const { event_table } = tables;
+  const { intervals, events, categories, themes, settings } = ctx.state;
+  const { dispatch, playSoundFile, state, translation, tables } = ctx;
+  const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
+  const { sound, theme, notifications, currency, id, language } = settings;
+  const currentTheme = themes[theme] || themes["LIGHT"];
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background,
+      color: currentTheme.text,
+    },
+  });
   useEffect(() => {
     const performDBReinit = async () => {
       const reinit = await event_table.reinitializeDb();
@@ -76,16 +80,12 @@ const CalendarOutScreen = () => {
   //   (c) => c.type === selectedType
   // );
 
-  const toggleSwitch = () => {
-    setSelectedType((previousState) =>
-      previousState === "expense" ? "income" : "expense"
-    );
-  };
 
   return (
     <ScrollView style={styles.container}>
       {/* <ExpenseIncomeSwitch selectedType={selectedType} switchHandler={toggleSwitch} /> */}
       <ButtonSwitch
+        currentTheme={currentTheme}
         buttons={buttons}
         multiple={false}
         selectedIndices={selectedIndex}
@@ -99,11 +99,6 @@ const CalendarOutScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});
 
-export default CalendarOutScreen;
+
+export default MonthlySummaryScreen;

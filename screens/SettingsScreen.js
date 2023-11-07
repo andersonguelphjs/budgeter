@@ -1,77 +1,106 @@
-import React, { useContext } from "react";
-import { View, ScrollView, StyleSheet, Text } from "react-native";
+import React, { useContext, useState } from "react";
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  TouchableOpacity,
+} from "react-native";
 import Button from "../components/ui/Button";
 import GenericList from "../components/GenericList/GenericList";
 import { AppContext } from "../store/app-context";
 import IntervalList from "../components/IntervalList/IntervalList";
+import MiscSettings from "../components/MiscSettings/MiscSettings";
 
 const SettingsScreen = ({ navigation }) => {
   const ctx = useContext(AppContext);
+
   const { dispatch, playSoundFile, state, translation, tables } = ctx;
   const {
     hourly_income_table,
     settings_table,
     one_time_income_table,
     one_time_expense_table,
+    event_table,
   } = tables;
-  const { categories, settings } = state;
+  const { categories, settings, events, themes } = state;
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
   const { sound, theme, notifications, currency, id, language } = settings;
+  const currentTheme = themes[theme] || themes["LIGHT"];
+  // console.log("currentTheme: ", themes);
+  const styles = StyleSheet.create({
+    scrollViewContent: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: currentTheme.background,
+      color: currentTheme.text,
+    },
+    headerTitle: {
+      color: currentTheme.text,
+    },
+    settingRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    settingsRow: {
+      marginTop: 15,
+    },
+  });
 
-  console.log("settings id: ", id);
+  const deleteCategoryAndDependencies = async (config) => {
+    const { item, foreign_key, table, categories_key, category_items } = config;
+    console.log("deleteCategoryAndDependencies ", config)
+    const related_events = await event_table.getAllRowsByField(
+      foreign_key,
+      +item
+    );
+    //console.log(`related_events with ${foreign_key} ${item.id} ${related_events.length}`);
+    const deleted_events = await event_table.deleteAllRowsByField(
+      foreign_key,
+      +item
+    );
+    const after_delete_events = await event_table.getAllRowsByField(
+      foreign_key,
+      +item
+    );
+    //console.log(`after_delete_events with ${foreign_key} ${item.id} in db ${after_delete_events.length}`)
 
-  const toggleLanguage = async () => {
-    const newLanguage = language === "en" ? "ja" : "en";
-    const result = await settings_table.updateRow(id, {
-      language: newLanguage,
-    });
-    console.log("toggleLanuage ", result);
-    dispatch({ type: "TOGGLE_LANGUAGE", language: newLanguage });
+    const delete_item_result = await table.deleteRow(+item);
+    //console.log(`delete_item from ${categories_key} with id ${item.id}`)
+
+    console.log(
+      `(state) before delete current ${categories_key}  ${category_items.length}`
+    );
+    const newItems = [...category_items].filter((i) => i.id != item);;
+    const newEvents  = [...events].filter((i) => i[foreign_key] != item);;
+    console.log(
+      `(state) after remove item with id ${item}, new ${categories_key} length: ${newItems.length}`
+    );
+    console.log(`(state) before delete, events length: ${events.length}`);
+    if (categories_key === "intervals"){
+      dispatch({ type: "UPDATE_INTERVALS", intervals: newItems});
+    }
+    else{
+      dispatch({ type: "UPDATE_ITEMS", items: newItems, key: categories_key });
+    }
+
+    dispatch({ type: "UPDATE_EVENTS", events: newEvents });
   };
-  const toggleSound = async () => {
-    const newSound = sound === 1 ? 0 : 1;
-    const result = await settings_table.updateRow(id, { sound: newSound });
-    console.log("toggleSound ", result);
-    dispatch({ type: "TOGGLE_SOUND", sound: newSound });
-  };
-  const toggleTheme = async () => {
-    const newTheme = theme === "LIGHT" ? "DARK" : "LIGHT";
-    const result = await settings_table.updateRow(id, { theme: newTheme });
-    console.log("toggleTheme ", result);
-    dispatch({ type: "TOGGLE_THEME", theme: newTheme });
-  };
-  const toggleNotifications = async () => {
-    const newNotifications = notifications === 1 ? 0 : 1;
-    const result = await settings_table.updateRow(id, {
-      notifications: newNotifications,
-    });
-    console.log("toggleTheme ", result);
-    dispatch({ type: "TOGGLE_NOTIFICATIONS", notifications: newNotifications });
-  };
-  const toggleCurrency = async () => {
-    const newCurrency = currency === "¥" ? "$" : "¥";
-    const result = await settings_table.updateRow(id, {
-      currency: newCurrency,
-    });
-    console.log("toggleTheme ", result);
-    dispatch({ type: "TOGGLE_CURRENCY", currency: newCurrency });
-  };
+
   return (
     <ScrollView
       contentContainerStyle={styles.scrollViewContent}
       // Add additional props you need for the ScrollView
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
-      >
+      <View style={styles.settingsRow}>
         {/* <HourlyIncomeList /> */}
         <GenericList
-          itemKey={"HourlyIncomes"}
+          itemKey={"hourlyIncomes"}
+          currentTheme={currentTheme}
           title={"Hourly Incomes"}
           items={hourlyIncomes}
           table={hourly_income_table}
@@ -82,19 +111,18 @@ const SettingsScreen = ({ navigation }) => {
           amountOrRate={"rate"}
           placeholderText={"hourly_wage"}
           text_key={"hourly_wage"}
+          foreign_key="hourly_income_id"
+          modalText={
+            "Delete hourly income category?\n\nThis will delete all related events"
+          }
+          onItemDelete={deleteCategoryAndDependencies}
         />
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
-      >
+      <View style={styles.settingsRow}>
         {/* <HourlyIncomeList /> */}
         <GenericList
           itemKey={"oneTimeIncomes"}
+          currentTheme={currentTheme}
           title={"One Time Incomes"}
           items={oneTimeIncomes}
           table={one_time_income_table}
@@ -105,19 +133,17 @@ const SettingsScreen = ({ navigation }) => {
           amountOrRate={"amount"}
           placeholderText={"income"}
           text_key={"income"}
+          foreign_key="one_time_income_id"
+          modalText={
+            "Delete one time income category?\n\nThis will delete all related events"
+          }
+          onItemDelete={deleteCategoryAndDependencies}
         />
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
-      >
-        {/* <HourlyIncomeList /> */}
+      <View style={styles.settingsRow}>
         <GenericList
           itemKey={"oneTimeExpenses"}
+          currentTheme={currentTheme}
           title={"One Time Expenses"}
           items={oneTimeExpenses}
           table={one_time_expense_table}
@@ -128,75 +154,36 @@ const SettingsScreen = ({ navigation }) => {
           amountOrRate={"amount"}
           placeholderText={"expense"}
           text_key={"expense"}
+          foreign_key="one_time_expense_id"
+          modalText={
+            "Delete one time expense category?\n\nThis will delete all related events"
+          }
+          onItemDelete={deleteCategoryAndDependencies}
         />
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
-      >
-        <IntervalList />
+      <View style={styles.settingsRow}>
+        <IntervalList 
+          foreign_key="interval_id"
+          modalText={
+            "Delete interval?\n\nThis will delete all related events"
+          }
+          onItemDelete={deleteCategoryAndDependencies}
+        />
       </View>
-      <View style={styles.container}>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Language:</Text>
-          <Button onPress={toggleLanguage} shape="pill">
-            {language}
-          </Button>
-        </View>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Sound:</Text>
-          <Button onPress={toggleSound} shape="pill">
-            {sound === 1 ? "ON" : "OFF"}
-          </Button>
-        </View>
-
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Theme:</Text>
-          <Button onPress={toggleTheme} shape="pill">
-            {theme}
-          </Button>
-        </View>
-
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Notifications:</Text>
-          <Button onPress={toggleNotifications} shape="pill">
-            {notifications === 1 ? "ON" : "OFF"}
-          </Button>
-        </View>
-
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>Currency:</Text>
-          <Button onPress={toggleCurrency} shape="pill">
-            {currency}
-          </Button>
-        </View>
-      </View>
+      <MiscSettings
+        settings_table={settings_table}
+        language={language}
+        dispatch={dispatch}
+        sound={sound}
+        theme={theme}
+        notifications={notifications}
+        currency={currency}
+        currentTheme={currentTheme}
+        styles={styles}
+        id={id}
+      />
     </ScrollView>
   );
 };
-const styles = StyleSheet.create({
-  scrollViewContent: {
-    // Apply the styles you need for the content inside the scroll view
-    // For example, you might want to add padding or specific alignment
-    padding: 16,
-    paddingBottom: 50, // Add padding at the bottom for better visual spacing
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  settingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  settingLabel: {
-    fontSize: 16,
-  },
-});
+
 export default SettingsScreen;

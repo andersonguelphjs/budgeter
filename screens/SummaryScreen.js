@@ -23,11 +23,27 @@ const SummaryScreen = ({ navigation }) => {
     // ... other buttons
   ];
   const ctx = useContext(AppContext);
-  const { intervals, events, categories } = ctx.state;
-
+  const { state, dispatch, playSoundFile, translation, tables } = ctx;
+  const { intervals, events, categories, themes, settings } = state;
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
-  const { state, dispatch, playSoundFile, tables } = ctx;
   const { event_table } = tables;
+  const { sound, theme, notifications, currency, id, language } = settings;
+
+  const currentTheme = themes[theme] || themes["LIGHT"];
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background,
+      color: currentTheme.text,
+    },
+    buttonContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 20,
+    },
+  });
+
   useEffect(() => {
     const performDBReinit = async () => {
       const reinit = await event_table.reinitializeDb();
@@ -188,11 +204,14 @@ const SummaryScreen = ({ navigation }) => {
             )
           }
           shape="pill"
-          backgroundColor="#000"
+          backgroundColor={currentTheme.button}
+          textStyle={{color: currentTheme.text}}
+          buttonStyle={{width: "100%", borderWidth: 1,  borderColor: 'black'}}
         >
           Filter By date range above
         </Button>
         <ButtonSwitch
+          currentTheme={currentTheme}
           buttons={buttons}
           multiple={false}
           selectedIndices={selectedIndex}
@@ -200,8 +219,11 @@ const SummaryScreen = ({ navigation }) => {
         />
         <View style={styles.buttonContainer}>
           <Button
-            tshape="pill"
+            shape="pill"
             onPress={selectedIndex === 1 ? handleLastMonth : handleThisMonth}
+            backgroundColor={currentTheme.button}
+            textStyle={{color: currentTheme.text}}
+            buttonStyle={{ borderWidth: 1,  borderColor: 'black'}}
           >
             1 mo
           </Button>
@@ -210,6 +232,9 @@ const SummaryScreen = ({ navigation }) => {
             onPress={
               selectedIndex === 1 ? handleLastQuarter : handleThisQuarter
             }
+            backgroundColor={currentTheme.button}
+            textStyle={{color: currentTheme.text}}
+            buttonStyle={{ borderWidth: 1,  borderColor: 'black'}}
           >
             3 mo
           </Button>
@@ -218,12 +243,18 @@ const SummaryScreen = ({ navigation }) => {
             onPress={
               selectedIndex === 1 ? handleLastHalfYear : handleThisHalfYear
             }
+            backgroundColor={currentTheme.button}
+            textStyle={{color: currentTheme.text}}
+            buttonStyle={{ borderWidth: 1,  borderColor: 'black'}}
           >
             6 mo
           </Button>
           <Button
             shape="pill"
             onPress={selectedIndex === 1 ? handleLastYear : handleThisYear}
+            backgroundColor={currentTheme.button}
+            textStyle={{color: currentTheme.text}}
+            buttonStyle={{ borderWidth: 1,  borderColor: 'black'}}
           >
             12 mo
           </Button>
@@ -232,6 +263,7 @@ const SummaryScreen = ({ navigation }) => {
 
       {hourlyIncomes && intervals && oneTimeExpenses && oneTimeIncomes && (
         <FinancialSummaryTable
+          currentTheme={currentTheme}
           events={filteredEvents}
           oneTimeExpenses={oneTimeExpenses}
           oneTimeIncomes={oneTimeIncomes}
@@ -242,16 +274,5 @@ const SummaryScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-});
 
 export default SummaryScreen;

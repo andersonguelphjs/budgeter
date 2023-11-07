@@ -14,8 +14,24 @@ const MonthSummary = ({ markedDates, selectedType }) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // months are 0-based in JavaScript
   const [extractedData, setExtractedData] = useState(null);
   const ctx = useContext(AppContext);
-  const { intervals, events, categories } = ctx.state;
-  
+  const { intervals, events, categories,themes, settings } = ctx.state;
+  const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
+  const { sound, theme, notifications, currency, id, language } = settings;
+  const currentTheme = themes[theme] || themes["LIGHT"];
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    chartContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingBottom: 20,
+    },
+    tableContainer: {
+      // ...any other styling for the table container
+    },
+  });
   useEffect(() => {
     if (!markedDates) {
       setExtractedData("No data");
@@ -78,7 +94,7 @@ const MonthSummary = ({ markedDates, selectedType }) => {
               category_type: item.type || "",
               category_color: item.color || "",
               category_description: item.description || "",
-              category_rate: item.rate || null,
+              category_rate: item.rate || dot.amount,
               category_amount: dot.amount,
               note: dot.note,
               type: dot.type,
@@ -86,11 +102,11 @@ const MonthSummary = ({ markedDates, selectedType }) => {
               interval_startTime:
                 (intervalItem?.startTime &&
                   getHourMinutes(intervalItem.startTime)) ||
-                "",
+                "N/A",
               interval_endTime:
                 (intervalItem?.endTime &&
                   getHourMinutes(intervalItem.endTime)) ||
-                "",
+                "N/A",
               key: dot.key,
               total:
                 (selectedType === "income" &&
@@ -170,18 +186,18 @@ const MonthSummary = ({ markedDates, selectedType }) => {
       : ["dateString", "category_description", "amount", "note", "total"];
   const headerText =
     selectedType === "income"
-      ? ["Date", "Start", "End", "Rate", "Description", "Total"]
-      : ["Date", "Cateegory", "Amount", "Note", "Total"];
+      ? ["Date", "Start", "End", "Amount/Rate", "Description", "Total"]
+      : ["Date", "Category", "Amount", "Note", "Total"];
 
   // console.log(extractedData)
   const data = extractedData && extractDataByHeaders(extractedData, properties);
-  const styleConfig = {
-    headerBackground: "#4a148c",
-    headerColor: "#ffffff",
-    rowBackground: "#f3e5f5",
-    rowColor: "#4a148c",
-    borderColor: "#ce93d8",
-  };
+  // const styleConfig = {
+  //   headerBackground: "#4a148c",
+  //   headerColor: "#ffffff",
+  //   rowBackground: "#f3e5f5",
+  //   rowColor: "#4a148c",
+  //   borderColor: "#ce93d8",
+  // };
   //// console.log(data)
   return (
     <ScrollView style={styles.container}>
@@ -198,10 +214,11 @@ const MonthSummary = ({ markedDates, selectedType }) => {
       <View style={styles.tableContainer}>
         {data && (
           <MonthTable
+            currentTheme={currentTheme}
             properties={properties}
             headerText={headerText}
             data={data}
-            styleConfig={styleConfig}
+            styleConfig={{}}
           />
         )}
       </View>
@@ -209,19 +226,6 @@ const MonthSummary = ({ markedDates, selectedType }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  chartContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  tableContainer: {
-    // ...any other styling for the table container
-  },
-});
+
 
 export default MonthSummary;

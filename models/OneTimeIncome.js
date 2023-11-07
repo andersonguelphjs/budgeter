@@ -16,7 +16,7 @@ export default class OneTimeIncome {
       this._amount = config.amount || "";
       this._translation_key = config.translation_key || "";
     }
-  
+
     toJSON() {
       return JSON.stringify({
         id: this.id || "",

@@ -1,8 +1,8 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import SettingsScreen from "../screens/SettingsScreen";
-import CalendarInScreen from "../screens/CalendarInScreen";
-import CalendarOutScreen from "../screens/CalendarOutScreen";
+import CalendarScreen from "../screens/CalendarScreen";
+import MonthlySummaryScreen from "../screens/MonthlySummaryScreen";
 import AdminScreen from "../screens/AdminScreen";
 import SummaryScreen from "../screens/SummaryScreen";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,8 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        // headerShown: route.name === "Settings",
+        tabBarShowLabel: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -38,8 +40,8 @@ const BottomTabNavigator = () => {
       }}
     >
       <Tab.Screen name="Settings" component={SettingsScreen} />
-      <Tab.Screen name="Calendar" component={CalendarInScreen} />
-      <Tab.Screen name="Pie" component={CalendarOutScreen} />
+      <Tab.Screen name="Calendar" component={CalendarScreen} />
+      <Tab.Screen name="Pie" component={MonthlySummaryScreen} />
       <Tab.Screen name="Summary" component={SummaryScreen} />
       <Tab.Screen name="Admin" component={AdminScreen} />
     </Tab.Navigator>

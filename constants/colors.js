@@ -1,4 +1,11 @@
 export const colors = {
+  shufu_dark_text: "#1a1a1a",
+  shufu_light_text: "#f6eef3",
+  shufu_light_pink: "#fbd4e1",
+  shufu_grey: "#f6eef3",
+  shufu_blue: "#68b2d7",
+  shufu_dark_pink: "#d9aac9",
+  shufu_brown: "#7a6562",
   primary: "#4A6D41", // Forest Green
   primaryLight: "hsl(105, 30%, 50%)", // Slightly lighter Forest Green
   primaryLightest: "hsl(105, 15%, 25%)", // Slightly lighter Forest Green
@@ -89,34 +96,33 @@ export const colors = {
   lateNight: "#191970",
   lateNight_late: "#0D0C55",
   midnight: "#000000",
-  midnight_late: "#000000",
-  1: "#000000",
-  2: "#000000",
-  3: "#000000",
-  4: "#000000",
-  4: "#FFCBA4", // Light Coral
-  5: "#F3A791", // Peach
-  6: "#FFDAB9",
-  7: "#FFEBD6",
-  8: "#87CEEB",
-  9: "#44B9FF",
-  10: "#44B9FF",
-  11: "#44B9FF",
-  12: "#44B9FF",
-  13: "#44B9FF",
-  14: "#80DFFF",
-  15: "#80DFFF",
-  16: "#80DFFF",
-  17: "#BFA500",
+  midnight_late: "#000000"
 
+};
 
-  18: "#FFA500",
-  19: "#9E5400",
-  20: "#800080",
-  21: "#400040",
-  22: "#000080",
-  23: "#0D0C55",
-  24: "#000000",
-
-
+export const themes = {
+  LIGHT: {
+    name: "light",
+    primary: colors.shufu_light_pink,
+    secondary: colors.shufu_blue,
+    accent: colors.shufu_dark_pink,
+    background: colors.shufu_grey,
+    text: colors.shufu_dark_text,
+    inverse_text: colors.shufu_light_text,
+    button: colors.shufu_blue,
+    header: colors.shufu_light_pink,
+    icon: "#f6eef3"
+  },
+  DARK: {
+    name: "dark",
+    primary: colors.shufu_dark_pink, // This could be a highlight color
+    secondary: colors.shufu_brown, // A less prominent but complementary highlight
+    accent: colors.shufu_blue, // Can remain the same if it contrasts well on dark
+    background: colors.shufu_dark_text, // A dark color, already defined as almost black
+    text: colors.shufu_light_text,
+    inverse_text: colors.shufu_dark_text, // Light pinkish color for text which is the grey from your light theme
+    button: colors.shufu_light_pink, // Buttons could stand out with a lighter color
+    header: colors.shufu_brown, // Headers could have a distinctive color
+    icon: "#fbd4e1"
+  },
 };

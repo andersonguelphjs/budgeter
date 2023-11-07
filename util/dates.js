@@ -36,6 +36,14 @@ export const convertToCalendarEvents = (config) => {
     const eventDot = {...event, ...{
       key: `${timestamp}_${index}`,
       color: color,
+      dot: {
+        width: 14,
+        height: 14,
+        marginTop: 1,
+        marginHorizontal: 1,
+        borderRadius: 2,
+        opacity: 0
+      },
       day: {
         dateString: date,
         day: new Date(timestamp).getUTCDate(),

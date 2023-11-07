@@ -11,6 +11,7 @@ const EventsForSelectedDay = (config) => {
     deleteEvent,
     getHourMinutes,
     styles,
+    currentTheme ={}
   } = config;
   const { dateString, timestamp } = selectedDay;
   const {    hourlyIncomes,
@@ -23,6 +24,7 @@ const EventsForSelectedDay = (config) => {
         const {
           event_type_key,
           amount,
+          rate,
           hourly_income_id,
           one_time_expense_id,
           one_time_income_id,
@@ -34,32 +36,20 @@ const EventsForSelectedDay = (config) => {
           id,
         } = event;
       
-        console.log("ev ", event)
         const typeKey = getTypeArrayKey(event_type_key)
        
         const items = categories[typeKey];
-        console.log("items ", items);
         const itemId = event[event_type_key]
         const item = items.find(i => i.id === itemId) || {}
-        console.log("iternval l ", intervals.length, event_type_key, typeKey, interval_id)
+
         const intervalItem = event_type_key === "hourly_income_id" && intervals.find(i => i.id === interval_id) || {}
-        console.log("intervalItem ", intervalItem)
-        {/* const color = getProperty({
-          items: items,
-          id: itemId,
-          property: "color",
-          default_return: "#000",
-        });
-        const color = getProperty({
-          items: items,
-          id: itemId,
-          property: "color",
-          default_return: "#000",
-        }); */}
+
         return (
           <EventItem
             dateString={dateString}
             key={`${timestamp}_${index}`}
+            amount={amount}
+            rate={rate}
             description={item.description || "missing description"}
             intervalText={Object.keys(intervalItem).length > 0 && `${getHourMinutes(intervalItem.endTime)} - ${getHourMinutes(intervalItem.startTime)}` || ""}
             color={item.color}

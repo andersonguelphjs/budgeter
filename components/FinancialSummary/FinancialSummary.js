@@ -4,11 +4,49 @@ import { calculateTotal } from "../../util/math";
 import { getTypeArrayKey } from "../../util/budgeter_util";
 
 const FinancialSummaryTable = (props) => {
-  const { events, hourlyIncomes, oneTimeExpenses, oneTimeIncomes, intervals } =
+  const { events, hourlyIncomes, oneTimeExpenses, oneTimeIncomes, intervals, currentTheme= {} } =
     props;
   // Aggregate data by month/year.
   const aggregatedData = {};
-
+  const styles = StyleSheet.create({
+    table: {
+      color: currentTheme.text || "black",
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 5,
+      overflow: "hidden", // This ensures the border radius is applied to child components
+      backgroundColor: currentTheme.background || "#fff",
+    },
+    tableRow: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderColor: "#ddd",
+      padding: 10,
+      backgroundColor : currentTheme.background
+    },
+    tableHeaderRow: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderColor: "#ddd",
+      padding: 10,
+      backgroundColor : currentTheme.accent
+    },
+    tableHeader: {
+      fontWeight: "bold",
+      flex: 1, // this will divide the row space equally between the columns
+      textAlign: "center",
+    },
+    tableCell: {
+      flex: 1, // this will divide the row space equally between the columns
+      textAlign: "center",
+    },
+    positiveTotal: {
+      color: "green",
+    },
+    negativeTotal: {
+      color: "red",
+    },
+  });
   events.forEach((event) => {
     console.log("evemt", event);
     const { event_type_key, date, interval_id, type, amount } = event;
@@ -81,7 +119,7 @@ const FinancialSummaryTable = (props) => {
   return (
     <View style={styles.table}>
       {/* Table header */}
-      <View style={styles.tableRow}>
+      <View style={styles.tableHeaderRow}>
         <Text style={styles.tableHeader}>Month/Year</Text>
         <Text style={styles.tableHeader}>Income</Text>
         <Text style={styles.tableHeader}>Expense</Text>
@@ -114,38 +152,6 @@ const FinancialSummaryTable = (props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  table: {
-    color: "black",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-    overflow: "hidden", // This ensures the border radius is applied to child components
-    backgroundColor: "#fff",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
-    padding: 10,
-  },
-  tableHeader: {
-    fontWeight: "bold",
-    flex: 1, // this will divide the row space equally between the columns
-    padding: 10,
-    textAlign: "center",
-  },
-  tableCell: {
-    flex: 1, // this will divide the row space equally between the columns
-    padding: 10,
-    textAlign: "center",
-  },
-  positiveTotal: {
-    color: "green",
-  },
-  negativeTotal: {
-    color: "red",
-  },
-});
+
 
 export default FinancialSummaryTable;

@@ -21,7 +21,7 @@ import EventsForSelectedDay from "../components/EventsForSelectedDay/EventsForSe
 import EventAdd from "../components/EventAdd/EventAdd";
 import ButtonSwitch from "../components/ui/ButtonSwitch";
 import { getFilteredMarkedDates } from "../util/budgeter_util";
-const CalendarInScreen = () => {
+const CalendarScreen = () => {
   const [selectedType, setSelectedType] = useState("income");
   const [selectedDay, setSelectedDay] = useState({});
   const [markedDates, setMarkedDates] = useState({});
@@ -52,10 +52,116 @@ const CalendarInScreen = () => {
 
   // Retrieving HourlyIncomes and intervals from context
   const ctx = useContext(AppContext);
-  const { intervals, events, categories } = ctx.state;
+  const { dispatch, playSoundFile, state, translation, tables } = ctx;
+  const { intervals, events, categories, themes, settings } = ctx.state;
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
-  const { state, dispatch, playSoundFile, tables } = ctx;
-  const { event_table } = tables;
+  const { sound, theme, notifications, currency, id, language } = settings;
+  const currentTheme = themes[theme] || themes["LIGHT"];
+  const {
+    hourly_income_table,
+    settings_table,
+    one_time_income_table,
+    one_time_expense_table,
+    event_table,
+  } = tables;
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background,
+      color: currentTheme.text,
+    },
+    chooseADayText: {
+      textAlign: "center",
+      backgroundColor: currentTheme.button,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'black'
+    },
+    addEventText: {
+      textAlign: "center",
+      backgroundColor: currentTheme.button,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'black'
+    },
+    hidden: {
+      display: "none",
+    },
+    horizontalLayout: {
+      flexDirection: "row", // this makes children align horizontally
+      alignItems: "center", // this centers them vertically
+      justifyContent: "flex-start", // this aligns items to the start of the parent container
+      marginVertical: 10, // add margin if needed
+    },
+    label: {
+      marginRight: 10, // space between label and input
+      // ... other styles for the label ...
+    },
+    input: {
+      flex: 1, // this makes the input take up the remaining space
+      height: 40, // or other height as needed
+      // ... other styles for the input ...
+    },
+    switchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginVertical: 10, // add some margin at the top and bottom if needed
+    },
+    label: {
+      marginHorizontal: 8, // changed from margin to marginHorizontal for specificity
+    },
+    itemContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: "#cccccc",
+    },
+    eventListContainer: {
+      padding: 10,
+    },
+    eventItem: {
+      flexDirection: "row",
+      padding: 5,
+      borderRadius: 5,
+      justifyContent: "space-between",
+      alignItems: "center",
+      // additional styling...
+    },
+    addEventContainer: {
+      padding: 15,
+      backgroundColor: currentTheme.background,
+      color: currentTheme.text,
+      borderWidth: 1,
+      borderColor: 'black'
+    },
+    addButton: {
+      backgroundColor: "#4CAF50",
+      padding: 10,
+      opacity: 1,
+      borderWidth: 1,
+      borderColor: 'black'
+      // additional styling...
+    },
+    addButtonText: {
+      color: "#fff",
+      textAlign: "center",
+      // additional styling...
+    },
+    disabledButton: {
+      padding: 10,
+      // Maybe grey it out, or make it more transparent
+      backgroundColor: "grey", // or whatever you prefer
+      // ... other styles ...
+    },
+    disabledButtonText: {
+      textAlign: "center",
+      color: "darkgrey", // or whatever you prefer
+    },
+  });
+
   useEffect(() => {
     const performDBReinit = async () => {
       const reinit = await event_table.reinitializeDb();
@@ -74,9 +180,7 @@ const CalendarInScreen = () => {
     //performDBReinit()
     //fetchEventSchema()
   }, [events]);
-  // console.log("CIS events ", events);
-  // console.log("CIS intervals ", oneTimeIncomes);
-  //console.log("selectedDay", selectedDay);
+
   const chosenTypes =
     selectedType === "expenses"
       ? oneTimeExpenses
@@ -98,41 +202,11 @@ const CalendarInScreen = () => {
     console.log("Events", events.length);
     const newEvents = events.filter((i) => i.id !== id);
     console.log("newEvents", newEvents.length);
-    // Prepare the new markedDates state with the selected day
-    // const copyMarkedDates = {...markedDates};
-    // console.log("copyMarkedDates ", copyMarkedDates)
-    // const dayEvents = copyMarkedDates[dateString].dots.filter(event => event.key !== key );
-    // const newMarkedDates = {...copyMarkedDates, ...{ [dateString]: {dots : dayEvents} }}
-    // if (newMarkedDates[dateString].dots.length === 0 ){
-    //   delete newMarkedDates[dateString]
-    // }
-    // console.log("newMarkedDates ", newMarkedDates)
-    // // Update state with the new markings, this will refresh the calendar
-    // setMarkedDates(newMarkedDates);
-    //playSoundFile(null, 5);
     dispatch({ type: "UPDATE_EVENTS", events: newEvents });
-    // setItems(newItems);
   };
 
   const addEvent = async () => {
-    // console.log("Adding event selected day: ", selectedDay);
-    // console.log("Adding event HourlyIncome: " + hourlyIncome);
-    // console.log(chosenTypes);
-    // console.log("Adding event interval: " + interval);
-    // console.dir(selectedDay);
-    // if (
-    //   Object.keys(selectedDay).length === 0 ||
-    //   (selectedType === "income" && (!hourlyIncome || !interval)) ||
-    //   (selectedType === "expense" && !hourlyIncome)
-    // ) {
-    //   Alert.alert("Error", "Choose day and make sure all fields are required.");
-    //   return;
-    // }
     const { dateString, day, month, timestamp, year } = selectedDay;
-    // Find the color associated with the HourlyIncome
-    // const hourlyIncomeColor =
-    //   chosenTypes.find((c) => c.id === hourlyIncome)?.color || "#FF0000";
-
     const _hourly_income_id =
       (selectedType === "income" && incomeType === "hourly" && hourlyIncome) ||
       null;
@@ -171,13 +245,9 @@ const CalendarInScreen = () => {
     };
 
     const result = await event_table.createNewRow(itemToAdd);
-    console.log("event add result ", result);
+
     itemToAdd.id = result;
     const count = await event_table.getRowCount();
-    console.log("count", count);
-
-    // const allEvents = await getAllEventRows()
-
     playSoundFile(null, 2);
     const newEvents = [...events, itemToAdd];
     dispatch({
@@ -185,15 +255,8 @@ const CalendarInScreen = () => {
       events: newEvents,
     });
     // Reset the input fields after adding the event
-    clearDateData()
+    clearDateData();
   };
-  // console.log("chosenTypes.length", chosenTypes.length);
-  // This function is called whenever the switch is toggled
-  // const toggleSwitch = () => {
-  //   setSelectedType((previousState) =>
-  //     previousState === "expense" ? "income" : "expense"
-  //   );
-  // };
 
   const handleDayPress = (day) => {
     console.log(day);
@@ -229,25 +292,6 @@ const CalendarInScreen = () => {
     setSelectedDay(day);
   };
 
-  // const getFilteredMarkedDates = (markedDates, selectedType) => {
-  //   const filteredMarkedDates = {};
-
-  //   Object.keys(markedDates).forEach((date) => {
-  //     const eventsForDay = markedDates[date].dots || [];
-  //     const filteredEvents = eventsForDay.filter(
-  //       (dot) => dot.type === selectedType
-  //     ); // filter by type
-
-  //     if (filteredEvents.length > 0 || markedDates[date].selected) {
-  //       filteredMarkedDates[date] = {
-  //         ...markedDates[date], // preserve other properties
-  //         dots: filteredEvents,
-  //       };
-  //     }
-  //   });
-  //   ////console.log("filteredMarkedDates", filteredMarkedDates);
-  //   return filteredMarkedDates;
-  // };
   const clearDateData = () => {
     setHourlyIncome(null);
     setOneTimeIncome(null);
@@ -255,9 +299,8 @@ const CalendarInScreen = () => {
     setInterval(null);
     setAmount(0);
     setNote("");
-  }
-  const clearSelections = () =>{
-
+  };
+  const clearSelections = () => {
     console.log("clearSelections");
 
     // Update state with the new markings, this will refresh the calendar
@@ -265,13 +308,46 @@ const CalendarInScreen = () => {
       Object.keys(prev).forEach((date) => {
         delete prev[date].selected;
         delete prev[date].selectedColor;
-      }
-      
-    );
-    return prev
+      });
+      return prev;
     });
-    clearDateData()
-    setSelectedDay({})
+    clearDateData();
+    setSelectedDay({});
+  };
+  
+  const isDarkMode = theme === "DARK";
+  const calendarTheme = {
+    backgroundColor: isDarkMode ? "#000" : "#fff",
+    calendarBackground: isDarkMode ? "#1c1c1e" : "#fff",
+    textSectionTitleColor: isDarkMode ? "#b6c1cd" : "#b6c1cd",
+    textSectionTitleDisabledColor: isDarkMode ? "#d9e1e8" : "#d9e1e8",
+    selectedDayBackgroundColor: isDarkMode ? "#00adf5" : "#00adf5",
+    selectedDayTextColor: isDarkMode ? "#ffffff" : "#ffffff",
+    todayTextColor: isDarkMode ? "#00adf5" : "#00adf5",
+    dayTextColor: isDarkMode ? "#d9e1e8" : "#2d4150",
+    textDisabledColor: isDarkMode ? "#525c69" : "#d9e1e8",
+    dotColor: isDarkMode ? "#00adf5" : "#00adf5",
+    selectedDotColor: isDarkMode ? "#ffffff" : "#ffffff",
+    arrowColor: isDarkMode ? "orange" : "blue",
+    disabledArrowColor: isDarkMode ? "#d9e1e8" : "#d9e1e8",
+    monthTextColor: isDarkMode ? "#b6c1cd" : "#b6c1cd",
+    indicatorColor: isDarkMode ? "blue" : "red",
+    borderWidth: 1,
+    borderColor: 'black',
+    'stylesheet.day.multiDot': {
+      dot: {
+        width: 10,
+        height: 10,
+        marginTop: 1,
+        marginHorizontal: 1,
+        borderRadius: 5,
+      },
+      // If you have multiple dots and want to adjust the space between them, you can use this:
+      dotContainer: {
+        marginHorizontal: 2,
+      },
+    },
+    // ... other styling properties
   }
   const filteredMarkedDates = getFilteredMarkedDates(markedDates, selectedType);
   //console.log("selectedType", selectedType, incomeType);
@@ -287,9 +363,12 @@ const CalendarInScreen = () => {
     (selectedType === "income" && incomeDisabled) ||
     (selectedType === "expense" && (!oneTimeExpense || !amount));
   //console.log("addButtonsDisabled", addButtonDisabled)
+  
+ console.log("tehem ", theme, isDarkMode)
   return (
     <ScrollView style={styles.container}>
       <ButtonSwitch
+        currentTheme={currentTheme}
         buttons={buttons}
         multiple={false}
         selectedIndices={selectedIndex}
@@ -297,6 +376,7 @@ const CalendarInScreen = () => {
       />
       {selectedDay && filteredMarkedDates[selectedDay.dateString]?.dots && (
         <EventsForSelectedDay
+          currentTheme={currentTheme}
           selectedDay={selectedDay}
           dayEvents={filteredMarkedDates[selectedDay.dateString]?.dots}
           categories={categories}
@@ -306,126 +386,49 @@ const CalendarInScreen = () => {
           styles={styles} // if `styles` is not global, you should pass it through
         />
       )}
-
-      {/* Next, we display the calendar */}
       <Calendar
         markedDates={filteredMarkedDates}
         markingType={"multi-dot"}
         onDayPress={handleDayPress}
         onMonthChange={clearSelections}
+        theme={calendarTheme}
       />
-      {Object.keys(selectedDay).length === 0 && (
+      {(Object.keys(selectedDay).length === 0 && (
         <Text style={styles.chooseADayText}>Select a day</Text>
+      )) || <Text style={styles.addEventText}>Event to add details</Text>}
+      {Object.keys(selectedDay).length > 0 && (
+        <EventAdd
+          currentTheme={currentTheme}
+          styles={styles}
+          chosenTypes={chosenTypes}
+          hourlyIncome={hourlyIncome}
+          oneTimeIncome={oneTimeIncome}
+          setOneTimeIncome={setOneTimeIncome}
+          oneTimeExpense={oneTimeExpense}
+          setOneTimeExpense={setOneTimeExpense}
+          categories={categories}
+          setHourlyIncome={setHourlyIncome}
+          selectedType={selectedType}
+          incomeType={incomeType}
+          setIncomeType={setIncomeType}
+          intervals={intervals}
+          interval={interval}
+          setInterval={setInterval}
+          getHourMinutes={getHourMinutes}
+          amount={amount}
+          setAmount={setAmount}
+          note={note}
+          setNote={setNote}
+          addEvent={addEvent}
+          addButtonDisabled={addButtonDisabled}
+          selectedDay={selectedDay}
+
+        />
       )}
-      {Object.keys(selectedDay).length > 0 &&
-      <EventAdd
-        styles={styles}
-        chosenTypes={chosenTypes}
-        hourlyIncome={hourlyIncome}
-        oneTimeIncome={oneTimeIncome}
-        setOneTimeIncome={setOneTimeIncome}
-        oneTimeExpense={oneTimeExpense}
-        setOneTimeExpense={setOneTimeExpense}
-        categories={categories}
-        setHourlyIncome={setHourlyIncome}
-        selectedType={selectedType}
-        incomeType={incomeType}
-        setIncomeType={setIncomeType}
-        intervals={intervals}
-        interval={interval}
-        setInterval={setInterval}
-        getHourMinutes={getHourMinutes}
-        amount={amount}
-        setAmount={setAmount}
-        note={note}
-        setNote={setNote}
-        addEvent={addEvent}
-        addButtonDisabled={addButtonDisabled}
-      />}
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  chooseADayText: {
-    textAlign: "center",
-    backgroundColor: "yellow",
-  },
-  hidden: {
-    display: "none",
-  },
-  horizontalLayout: {
-    flexDirection: "row", // this makes children align horizontally
-    alignItems: "center", // this centers them vertically
-    justifyContent: "flex-start", // this aligns items to the start of the parent container
-    marginVertical: 10, // add margin if needed
-  },
-  label: {
-    marginRight: 10, // space between label and input
-    // ... other styles for the label ...
-  },
-  input: {
-    flex: 1, // this makes the input take up the remaining space
-    height: 40, // or other height as needed
-    // ... other styles for the input ...
-  },
-  switchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 10, // add some margin at the top and bottom if needed
-  },
-  label: {
-    marginHorizontal: 8, // changed from margin to marginHorizontal for specificity
-  },
-  itemContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#cccccc",
-  },
-  eventListContainer: {
-    padding: 10,
-  },
-  eventItem: {
-    flexDirection: "row",
-    padding: 5,
-    borderRadius: 5,
-    justifyContent: "space-between",
-    alignItems: "center",
-    // additional styling...
-  },
-  addEventContainer: {
-    padding: 15,
-    // additional styling...
-  },
-  addButton: {
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    opacity: 1,
-    // additional styling...
-  },
-  addButtonText: {
-    color: "#fff",
-    textAlign: "center",
-    // additional styling...
-  },
-  disabledButton: {
-    padding: 10,
-    // Maybe grey it out, or make it more transparent
-    backgroundColor: "grey", // or whatever you prefer
-    // ... other styles ...
-  },
-  disabledButtonText: {
-    textAlign: "center",
-    color: "darkgrey", // or whatever you prefer
-  },
-});
 
-export default CalendarInScreen;
+
+export default CalendarScreen;

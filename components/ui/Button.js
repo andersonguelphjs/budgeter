@@ -18,7 +18,7 @@ function Button({
   paddingHorizontal = 6,
   marginVertical = 0,
   marginHorizontal = 4,
-  backgroundColor = '#4CAF50', // default color; you might want to use your color constant here
+  backgroundColor = colors.shufu_blue, // default color; you might want to use your color constant here
   shadow = true,
   textColor = 'white',
   fontSize = 16,
@@ -27,6 +27,7 @@ function Button({
   textStyle = {},
   
 }) {
+  console.log(textStyle)
   // Choose the shape style from the BUTTON_SHAPES, defaulting to the style for 'roundedSquare' if the shape prop is not recognized.
   const shapeStyle = BUTTON_SHAPES[shape] || BUTTON_SHAPES.roundedSquare;
 
@@ -48,7 +49,7 @@ function Button({
       justifyContent: 'center',
       marginVertical: 10,
       maxWidth: '50%',
-      minWidth: '10%',
+      minWidth: '20%',
       alignSelf: 'center',
       ...shapeStyle, // apply the styles for the chosen shape
       ...shadowStyles,

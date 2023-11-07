@@ -13,10 +13,10 @@ const EventAdd = ({
   setOneTimeExpense,
   oneTimeIncome,
   setOneTimeIncome,
-
-
+  currentTheme={},
   selectedType,
   incomeType,
+  selectedDay,
   setIncomeType,
   intervals,
   interval,
@@ -53,10 +53,12 @@ const EventAdd = ({
     setIncomeType(index == 0 ? "hourly" : "one_time")
     setSelectedIndex(index)
   }
+  console.log("curent ", currentTheme)
   return (
     <View style={styles.addEventContainer}>
       {selectedType === "income" && (
         <ButtonSwitch
+          currentTheme={currentTheme}
           buttons={buttons}
           multiple={false}
           selectedIndices={selectedIndex}
@@ -69,30 +71,36 @@ const EventAdd = ({
             selectedValue={hourlyIncome}
             onValueChange={(itemValue) => setHourlyIncome(itemValue)}
             prompt="Select HourlyIncome"
+            style={{ backgroundColor: currentTheme.background || "white" }}
+            color={ currentTheme.text || "black" }
           >
-            {/* Picker Items */}
             <Picker.Item
               key={"def_cat"}
               label="Select a Hourly Income"
               value={null}
+              color={ currentTheme.text || "black" }
             />
             {hourlyIncomes.map((cat) => (
               <Picker.Item
                 key={`cat_${cat.id}`}
                 label={cat.description}
                 value={cat.id}
-              />
+                color={ currentTheme.text || "black" }
+            />
+         
             ))}
           </Picker>
           <Picker
             selectedValue={interval}
             onValueChange={(itemValue) => setInterval(itemValue)}
             prompt="Select interval"
+            style={{ backgroundColor: currentTheme.background || "white" }}
           >
             <Picker.Item
               key={"def_interval"}
               label="Select an interval"
               value={null}
+              color={ currentTheme.text || "black" }
             />
             {intervals.map((int) => (
               <Picker.Item
@@ -101,6 +109,7 @@ const EventAdd = ({
                   int.endTime
                 )}`}
                 value={int.id}
+                color={ currentTheme.text || "black" }
               />
             ))}
           </Picker>
@@ -111,17 +120,20 @@ const EventAdd = ({
           selectedValue={oneTimeIncome}
           onValueChange={(itemValue) => setOneTimeIncome(itemValue)}
           prompt="Select HourlyIncome"
+          style={{ backgroundColor: currentTheme.background || "white" }}
         >
           <Picker.Item
             key={"def_cat"}
             label="Select a One Time Income"
             value={null}
+            color={ currentTheme.text || "black" }
           />
           {oneTimeIncomes.map((cat) => (
             <Picker.Item
               key={`cat_${cat.id}`}
               label={cat.description}
               value={cat.id}
+              color={ currentTheme.text || "black" }
             />
           ))}
         </Picker>
@@ -131,17 +143,20 @@ const EventAdd = ({
           selectedValue={oneTimeExpense}
           onValueChange={(itemValue) => setOneTimeExpense(itemValue)}
           prompt="Select One Time Expense"
+          style={{ backgroundColor: currentTheme.background || "white" }}
         >
           <Picker.Item
             key={"def_cat"}
             label="Select a One Time Expense"
             value={null}
+            color={ currentTheme.text || "black" }
           />
           {oneTimeExpenses.map((cat) => (
             <Picker.Item
               key={`cat_${cat.id}`}
               label={cat.description}
               value={cat.id}
+              color={ currentTheme.text || "black" }
             />
           ))}
         </Picker>
@@ -165,6 +180,7 @@ const EventAdd = ({
             style={[styles.input, styles.multilineInput]}
             placeholder="Enter note"
             multiline
+            value={note}
             numberOfLines={4}
             onChangeText={setNote}
           />
@@ -182,7 +198,7 @@ const EventAdd = ({
             addButtonDisabled ? styles.disabledButtonText : styles.addButtonText
           }
         >
-          Add Event
+          Add Event {selectedDay?.dateString && ` to ${selectedDay.dateString}`}
         </Text>
       </TouchableOpacity>
     </View>

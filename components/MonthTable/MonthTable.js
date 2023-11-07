@@ -1,14 +1,15 @@
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 
-const MonthTable = ({ properties, headerText, data, styleConfig = {} }) => {
-  // Default colors configuration
+const MonthTable = ({ properties, headerText, data, styleConfig = {}, currentTheme ={} }) => {
+  // Default colors configuration\
+  console.log(currentTheme)
   const colors = {
-    headerBackground: styleConfig.headerBackground || '#333',
-    headerColor: styleConfig.headerColor || '#FFF',
-    rowBackground: styleConfig.rowBackground || '#FFF',
-    rowColor: styleConfig.rowColor || '#000',
-    borderColor: styleConfig.borderColor || '#CCC',
+    headerBackground: currentTheme.accent || '#333',
+    headerColor: currentTheme.text || '#FFF',
+    rowBackground: currentTheme.background || '#FFF',
+    rowColor: currentTheme.text || '#000',
+    borderColor: currentTheme.inverse_text || '#CCC',
     ...styleConfig // in case there are other style configurations
   };
 

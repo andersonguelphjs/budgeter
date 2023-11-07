@@ -4,13 +4,14 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  FlatList,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Button from "../ui/Button";
+import ConfirmationModal from "../ui/ConfirmationModal";
+import Toast from "react-native-toast-message";
 import _ from "lodash";
-
+import { defaultToastObj } from "../../util/ui";
 const GenericList = ({
   itemKey,
   title,
@@ -19,11 +20,83 @@ const GenericList = ({
   translation,
   dispatch,
   playSoundFile,
+  onItemDelete,
   state,
   amountOrRate,
   placeholderText,
   text_key,
+  foreign_key,
+  modalText = "Delet this item?",
+  currentTheme
 }) => {
+  const styles = StyleSheet.create({
+    container: {
+   
+    },
+    collapseButton: {
+  
+    },
+    collapseButtonText: {
+      color: currentTheme.text
+    },
+    listContent: {
+      padding: 10, // Space around the FlatList items
+    },
+    listItemContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 10,
+      backgroundColor: "#fff", // Visual separation of list items
+      marginBottom: 10, // Space between items
+      borderRadius: 5, // Optional rounded corners for aesthetics
+    },
+    colorCircle: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      marginRight: 10,
+      borderWidth: 1,  // This sets the border width
+      borderColor: 'black',
+    },
+    itemText: {
+      fontSize: 18,
+
+    },
+    iconsContainer: {
+      flexDirection: "row",
+    },
+    itemInput: {
+      padding: 0,
+      borderBottomWidth: 1,
+      borderBottomColor: "black",
+      minWidth: "30%"
+    },
+    inputContainer: {
+      flexDirection: "row",
+      padding: 0,
+      backgroundColor: "#fff",
+      borderRadius: 10,
+    },
+    input: {
+      flex: 1,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 10,
+      marginRight: 10,
+    },
+    addButton: {
+      padding: 10,
+      backgroundColor: "#007bff",
+      borderRadius: 10,
+    },
+    addButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+    },
+  });
+
   const [isCollapsed, setIsCollapsed] = useState(true);
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -34,17 +107,40 @@ const GenericList = ({
   const { settings } = state;
   const { language } = settings;
   const [newItem, setNewItem] = useState("");
-  const [newRate, setNewRate] = useState(0)
+  const [newRate, setNewRate] = useState(0);
   const [editIndex, setEditIndex] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const deleteItem = async (itemId, index) => {
-    console.log("deleteItem itemId", itemId)
-    const newItems = items.filter(i => i.id !== itemId);
-    const result = await table.deleteRow(itemId);
-    console.log("HourlyIncome delete result ",result)
-    playSoundFile(null, 5);
-    dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey});
-    //setItems(newItems);
+  const initiateDeleteItem = (item) => {
+    setSelectedItem(item);
+    setModalVisible(true);
+  };
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedItem(null);
+  };
+
+  console.log("selectedItem ", selectedItem);
+  
+  const deleteItem = async () => {
+    if (!selectedItem) return;
+
+    console.log("deleteItem itemId", selectedItem);
+
+    if (onItemDelete && typeof onItemDelete === "function") {
+      const obj = {
+        item: selectedItem,
+        foreign_key: foreign_key,
+        table: table,
+        categories_key: itemKey,
+        category_items: items,
+      };
+
+      onItemDelete(obj);
+    }
+    closeModal();
+    Toast.show(defaultToastObj);
   };
 
   const startEditing = (index) => {
@@ -55,12 +151,12 @@ const GenericList = ({
     const newItems = [...items];
     newItems[editIndex].description = text;
     dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey });
-    //setItems(newItems);
+;
     try {
       const result = await debouncedUpdate(newItems[editIndex].id, {
         description: newItems[editIndex].description,
       });
-      console.log("update text result ",result)
+      console.log("update text result ", result);
       playSoundFile(null, 4);
     } catch (error) {
       console.error("An error occurred:", error);
@@ -78,12 +174,12 @@ const GenericList = ({
       const result = await debouncedUpdate(newItems[editIndex].id, {
         [amountOrRate]: newItems[editIndex][amountOrRate],
       });
-      console.log("HourlyIncome update editRate result ",result)
+      console.log("HourlyIncome update editRate result ", result);
       playSoundFile(null, 4);
     } catch (error) {
       console.error("An error occurred:", error);
     }
-    // setEditIndex(null); // Close the editor
+
   };
 
   const addNewItem = async () => {
@@ -93,18 +189,18 @@ const GenericList = ({
       description: newItem,
       color: newColor,
       type: "expense",
-      [amountOrRate]: newRate || 0, 
+      [amountOrRate]: newRate || 0,
     };
     console.log("adding new item ", itemToAdd);
     const result = await table.createNewRow(itemToAdd);
-    console.log("add result ",result)
+    console.log("add result ", result);
     playSoundFile(null, 2);
     console.log("result", result);
     // setItems((currentItems) => [...currentItems, { id: result, ...itemToAdd }]);
     dispatch({
       type: "UPDATE_ITEMS",
       items: [...currentItems, { id: result, ...itemToAdd }],
-      key: itemKey
+      key: itemKey,
     });
     setNewItem("");
   };
@@ -115,69 +211,18 @@ const GenericList = ({
   };
 
   const changeColor = async (itemId, index) => {
-    
     let newItems = [...items];
-    const color = getRandomColor()
+    const color = getRandomColor();
     console.log("changeColor ", itemId, index, color);
     newItems[index].color = color;
     const result = await table.updateRow(itemId, {
       color: color,
     });
-    console.log("update color result ",result)
+    console.log("update color result ", result);
     playSoundFile(null, 3);
     dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey });
     // setItems(newItems);
   };
-
-  const renderItem = ({ item, index }) => {
-    const isEditing = editIndex === index;
-
-    return (
-      <View style={styles.listItemContainer}>
-        {isEditing ? (
-          <TextInput
-            style={styles.itemInput}
-            value={item.description}
-            onChangeText={(text) => editExistingText(text)}
-          />
-        ) : (
-          <Text style={styles.itemText}>{item.description}</Text>
-        )}
-        {isEditing ? (
-          <TextInput
-            style={styles.itemInput}
-            keyboardType="numeric"
-            value={item.type === "expense" ? String(item.amount || "") : String(item.rate || "")}
-            onChangeText={(text) => editRate(item.type, text)}
-          />
-        ) : (
-          <Text style={styles.itemText}>{item[amountOrRate]}</Text>
-        )}
-        <View style={styles.iconsContainer}>
-          <TouchableOpacity
-            style={[styles.colorCircle, { backgroundColor: item.color }]}
-            onPress={() => changeColor(item.id, index)}
-          />
-          <TouchableOpacity onPress={() => deleteItem(item.id, index)}>
-            <Ionicons name="trash-outline" size={24} color="red" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() =>
-              isEditing ? setEditIndex(null) : startEditing(index)
-            }
-          >
-            <Ionicons
-              name={isEditing ? "checkmark-circle-outline" : "create-outline"}
-              size={24}
-              color="blue"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
 
   return (
     <View style={styles.container}>
@@ -188,13 +233,65 @@ const GenericList = ({
       </TouchableOpacity>
       {!isCollapsed && (
         <View>
-          <FlatList
-            nestedScrollEnabled={true}
-            data={items}
-            renderItem={renderItem}
-            keyExtractor={(_, index) => String(index)}
-            contentContainerStyle={styles.listContent}
-          />
+          <View style={styles.listContent}>
+            {items.map((item, index) => {
+              const isEditing = editIndex === index;
+              const amountOrRate = item.type === "expense" ? "amount" : "rate";
+
+              return (
+                <View key={index} style={styles.listItemContainer}>
+                  {isEditing ? (
+                    <TextInput
+                      style={styles.itemInput}
+                      value={item.description}
+                      onChangeText={(text) => editExistingText(text, index)}
+                    />
+                  ) : (
+                    <Text style={styles.itemText}>{item.description}</Text>
+                  )}
+                  {isEditing ? (
+                    <TextInput
+                      style={styles.itemInput}
+                      keyboardType="numeric"
+                      value={String(item[amountOrRate] || "")}
+                      onChangeText={(text) => editRate(item.type, text, index)}
+                    />
+                  ) : (
+                    <Text style={styles.itemText}>{item[amountOrRate]}</Text>
+                  )}
+                  <View style={styles.iconsContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.colorCircle,
+                        { backgroundColor: item.color },
+                      ]}
+                      onPress={() => changeColor(item.id, index)}
+                    />
+                    <TouchableOpacity
+                      onPress={() => initiateDeleteItem(item.id, index)}
+                    >
+                      <Ionicons name="trash-outline" size={24} color="red" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        isEditing ? setEditIndex(null) : startEditing(index)
+                      }
+                    >
+                      <Ionicons
+                        name={
+                          isEditing
+                            ? "checkmark-circle-outline"
+                            : "create-outline"
+                        }
+                        size={24}
+                        color="blue"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
 
           {/* Input field and Add button */}
           <View style={styles.inputContainer}>
@@ -215,67 +312,25 @@ const GenericList = ({
               <Ionicons name="add" size={24} color="#fff" />
             </Button>
           </View>
+          <ConfirmationModal
+            modalVisible={modalVisible}
+            onConfirm={deleteItem}
+            onCancel={closeModal}
+            confirmText="Confirm"
+            cancelText="Cancel"
+            message={modalText}
+          />
+          <Toast
+            style={{
+              elevation: 20, //Render the Toast component in your app's entry file, as the LAST CHILD in the View hierarchy
+            }}
+          />
         </View>
       )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  listContent: {
-    padding: 10, // Space around the FlatList items
-  },
-  listItemContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 10,
-    backgroundColor: "#fff", // Visual separation of list items
-    marginBottom: 10, // Space between items
-    borderRadius: 5, // Optional rounded corners for aesthetics
-  },
-  colorCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  itemText: {
-    fontSize: 18,
-  },
-  iconsContainer: {
-    flexDirection: "row",
-  },
-  itemInput: {
-    // Style for your input (if different from your regular items)
-    borderBottomWidth: 1,
-    borderBottomColor: "black",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    padding: 5,
-    backgroundColor: "#fff",
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  addButton: {
-    padding: 10,
-    backgroundColor: "#007bff",
-    borderRadius: 10,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-});
+
 
 export default GenericList;

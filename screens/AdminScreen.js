@@ -9,11 +9,29 @@ import default_OneTimeExpenses from "../assets/preload/OneTimeExpensesDefault.js
 import default_OneTimeIncomes from "../assets/preload/OneTimeIncomesDefault.json";
 import Toast from "react-native-toast-message";
 import { getRandomColorVariation, randomRoundedBetween } from "../util/random";
+import ConfirmationModal from "../components/ui/ConfirmationModal";
 
 const AdminScreen = ({ navigation }) => {
-  const [selectedTable, setSelectedTable] = useState("settings_table");
+  const defaultModalMessage = "Are you sure you want to perform this action?";
+  const defaultToastObj = {
+    type: "success",
+    position: "top",
+    text1: selectedTable,
+    text2: `Reinitialized `,
+    visibilityTime: 4000,
+    autoHide: true,
+    topOffset: 30,
+    onShow: () => console.log("Toast shown"),
+    onHide: () => console.log("Toast hidden"),
+    onPress: () => console.log("Toast pressed"),
+  };
+  const [selectedTable, setSelectedTable] = useState(null);
   const [data, setData] = useState("make a query");
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalFunction, setModalFunction] = useState(() =>
+    console.log("modal function")
+  );
+  const [modalText, setModalText] = useState(defaultModalMessage);
   const ctx = useContext(AppContext);
   const { dispatch, playSoundFile, state, tables } = ctx;
   const {
@@ -24,6 +42,14 @@ const AdminScreen = ({ navigation }) => {
     interval_table,
     event_table,
   } = tables;
+  const table_map = {
+    hourly_income_table: hourly_income_table,
+    settings_table: settings_table,
+    interval_table: interval_table,
+    event_table: event_table,
+    one_time_income_table: one_time_income_table,
+    one_time_expense_table: one_time_expense_table,
+  };
   const {
     currentLanguage,
     language,
@@ -35,60 +61,61 @@ const AdminScreen = ({ navigation }) => {
     intervals,
     categories,
   } = state;
-  const {hourlyIncomes, oneTimeIncomes, oneTimeExpenses}= categories;
+  const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
 
-  // Utility function to get a random integer between min and max
   // Utility function to pick a random item's ID from an array
   const getRandomIdFromArray = (arr) => {
     const index = getRandomInt(0, arr.length - 1);
     return arr[index].id;
   };
-  
-  // This function should insert a new row into your events table.
-  // You'll need to implement it according to your database logic.
-  const createNewRow = async (itemToAdd) => {
-    const db = SQLite.openDatabase('your-database-name.db');
-    const fields = Object.keys(itemToAdd).join(', ');
-    const values = Object.values(itemToAdd).map((_) => '?').join(', ');
-  
-    return new Promise((resolve, reject) => {
-      db.transaction(tx => {
-        tx.executeSql(
-          `INSERT INTO events_table (${fields}) VALUES (${values});`,
-          Object.values(itemToAdd),
-          (_, result) => resolve(result),
-          (_, error) => reject(error)
-        );
-      });
-    });
-  };
-  
-  // Function to create dummy data
+
   const generateDummyEvents = async (numberOfEvents = 50) => {
     for (let i = 0; i < numberOfEvents; i++) {
-      const date = new Date(2023, getRandomInt(0, 11), getRandomInt(1, 28)).toISOString().split('T')[0];
+      const date = new Date(2023, getRandomInt(0, 11), getRandomInt(1, 28))
+        .toISOString()
+        .split("T")[0];
       const timestamp = +new Date(date);
-      
-      const eventTypes = ['hourly_income_id', 'one_time_income_id', 'one_time_expense_id'];
-      const selectedTypeKey = eventTypes[getRandomInt(0, eventTypes.length - 1)];
-      
+
+      const eventTypes = [
+        "hourly_income_id",
+        "one_time_income_id",
+        "one_time_expense_id",
+      ];
+      const selectedTypeKey =
+        eventTypes[getRandomInt(0, eventTypes.length - 1)];
+
       const itemToAdd = {
         date,
         timestamp,
         event_type_key: selectedTypeKey,
-        type: selectedTypeKey.includes('expense') ? 'expense' : 'income',
-        amount: selectedTypeKey !== 'hourly_income_id' ? getRandomInt(100, 1000) : null,
-        note: selectedTypeKey === 'one_time_expense_id' ? 'Dummy note' : null,
-        hourly_income_id: selectedTypeKey === 'hourly_income_id' ? getRandomIdFromArray(hourlyIncomes) : null,
-        interval_id: selectedTypeKey === 'hourly_income_id' ? getRandomIdFromArray(intervals) : null,
-        one_time_income_id: selectedTypeKey === 'one_time_income_id' ? getRandomIdFromArray(oneTimeIncomes) : null,
-        one_time_expense_id: selectedTypeKey === 'one_time_expense_id' ? getRandomIdFromArray(oneTimeExpenses) : null,
+        type: selectedTypeKey.includes("expense") ? "expense" : "income",
+        amount:
+          selectedTypeKey !== "hourly_income_id"
+            ? getRandomInt(100, 1000)
+            : null,
+        note: selectedTypeKey === "one_time_expense_id" ? "Dummy note" : null,
+        hourly_income_id:
+          selectedTypeKey === "hourly_income_id"
+            ? getRandomIdFromArray(hourlyIncomes)
+            : null,
+        interval_id:
+          selectedTypeKey === "hourly_income_id"
+            ? getRandomIdFromArray(intervals)
+            : null,
+        one_time_income_id:
+          selectedTypeKey === "one_time_income_id"
+            ? getRandomIdFromArray(oneTimeIncomes)
+            : null,
+        one_time_expense_id:
+          selectedTypeKey === "one_time_expense_id"
+            ? getRandomIdFromArray(oneTimeExpenses)
+            : null,
       };
-  
+
       // You can replace this console.log with your createNewRow function call
       const result = await event_table.createNewRow(itemToAdd);
       console.log("event add result ", result);
-  
+
       // Uncomment this line and implement createNewRow function with your database logic
       // await createNewRow(itemToAdd);
     }
@@ -96,32 +123,280 @@ const AdminScreen = ({ navigation }) => {
     const count = await event_table.getRowCount();
     console.log("count", count);
   };
-  
 
-
-  const performDBReinit = async (table, tableName = "table") => {
-    const reinit = await table.reinitializeDb();
-    console.log(`table ${tableName} reinit `, reinit);
-  };
+  const performTableReInit = async (table) => await table.reinitializeDb();
+  const performTableDrop = async (table) => await table.dropTable();
   const getAllRows = async (table, tableName = "table") => {
     const result = await table.getAllRows();
     console.log(`table ${tableName} all rows `, result);
     setData(result);
   };
-  const deleteAllRows = async (table, tableName = "table") => {
-    const result = await table.deleteAllRows();
-    console.log(`table ${tableName} delete all rows `, result);
+  // const stageGenerateEvents = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await generateDummyEvents(50);
+  //     const newEvents = await event_table.getAllRows();
+  //     console.log("newEvents ", newEvents.length);
+  //     dispatch({ type: "UPDATE_EVENTS", events: newEvents });
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: "Events table",
+  //         text2: `50 events generated `,
+  //       },
+  //     });
+  //     setData(newEvents);
+  //   });
+  //   setModalText(`Create 50 random events? `);
+  //   setModalVisible(true);
+  // };
+  // const stageTableInit = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await performTableReInit(table_map[selectedTable]);
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: selectedTable,
+  //         text2: `Reinitialized `,
+  //       },
+  //     });
+  //   });
+  //   setModalText(`Reinitialize ${selectedTable}? `);
+  //   setModalVisible(true);
+  // };
+  // const stageTableDrop = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await performTableDrop(table_map[selectedTable]);
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: selectedTable,
+  //         text2: `Dropped! `,
+  //       },
+  //     });
+  //   });
+  //   setModalText(`Drop (delete permanently) ${selectedTable}? `);
+  //   setModalVisible(true);
+  // };
+  // const stageDeleteAllRows = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await deleteAllRows(table_map[selectedTable], selectedTable);
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: selectedTable,
+  //         text2: `All rows deleted `,
+  //       },
+  //     });
+  //     const newRows = await getAllRows(table_map[selectedTable], selectedTable);
+  //     setData(newRows || []);
+  //   });
+  //   setModalText(`Delete all rows from ${selectedTable}? `);
+  //   setModalVisible(true);
+  // };
+  // const stageCreateRandomIntervals = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await createRandomIntervals();
+  //     const newIntervals = await interval_table.getAllRows();
+  //     console.log("newIntervals ", newIntervals.length);
+  //     dispatch({ type: "UPDATE_INTERVALS", intervals: newIntervals });
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: "RandomIntervals",
+  //         text2: "5 RandomIntervals creation complete ..",
+  //       },
+  //     });
+  //   });
+  //   setModalText(`Create 5 RandomIntervals? `);
+  //   setModalVisible(true);
+  // };
+  // const stagePreloadHourlyIncomes = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await preloadHourlyIncomes();
+  //     const newHourlyIncomes = await hourly_income_table.getAllRows();
+  //     console.log("newHourlyIncomes ", newHourlyIncomes.length);
+  //     dispatch({
+  //       type: "UPDATE_ITEMS",
+  //       items: newHourlyIncomes,
+  //       key: "hourlyIncomes",
+  //     });
+
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: "Hourly incomes",
+  //         text2: "Hourly incomes preloading complete ..",
+  //       },
+  //     });
+  //     setData(newHourlyIncomes);
+  //   });
+  //   setModalText(`Preload data for Hourly incomes? `);
+  //   setModalVisible(true);
+  // };
+  // const stagePreloadOneTimeIncomes = () => {
+  //   setModalFunction(() => async () => {
+  //     const res = await preloadOneTimeIncomes();
+  //     const newOneTimeIncomes = await one_time_income_table.getAllRows();
+  //     console.log("newOneTimeIncomes ", newOneTimeIncomes.length);
+  //     dispatch({
+  //       type: "UPDATE_ITEMS",
+  //       items: newOneTimeIncomes,
+  //       key: "oneTimeIncomes",
+  //     });
+  //     setModalVisible(false);
+  //     Toast.show({
+  //       ...defaultToastObj,
+  //       ...{
+  //         text1: "OneTimeIncomes",
+  //         text2: "OneTimeIncomes preloading complete ..",
+  //       },
+  //     });
+  //     setData(newOneTimeIncomes);
+  //   });
+  //   setModalText(`Preload data for OneTimeIncomes? `);
+  //   setModalVisible(true);
+  // };
+  // const stagePreloadOneTimeExpenses = () => {
+  //   setModalFunction();
+  //   setModalText(`Preload data forOneTime Expenses? `);
+  //   setModalVisible(true);
+  // };
+  const executeCreateRandomEvents = () => async () => {
+    const res = await generateDummyEvents(50);
+    const newEvents = await event_table.getAllRows();
+    console.log("newEvents ", newEvents.length);
+    dispatch({ type: "UPDATE_EVENTS", events: newEvents });
+    setModalVisible(false);
     Toast.show({
-      type: "success",
-      text1: `${tableName} HourlyIncomes deleted!`,
+      ...defaultToastObj,
+      ...{
+        text1: "Events table",
+        text2: `50 events generated `,
+      },
+    });
+    setData(newEvents);
+  };
+  const executeTableReInit = () => async () => {
+    const res = await performTableReInit(table_map[selectedTable]);
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: selectedTable,
+        text2: `Reinitialized `,
+      },
     });
   };
-  const handleConfirm = () => {
-    // Call your function here
-    performDBReinit(table_map[selectedTable], selectedTable);
-    // Close the modal
+  const executeTableDrop = () => async () => {
+    const res = await performTableDrop(table_map[selectedTable]);
     setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: selectedTable,
+        text2: `Dropped! `,
+      },
+    });
   };
+  const executeDeleteAllRows = () => async () => {
+    const res = await deleteAllRows(table_map[selectedTable], selectedTable);
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: selectedTable,
+        text2: `All rows deleted `,
+      },
+    });
+    const newRows = await getAllRows(table_map[selectedTable], selectedTable);
+    setData(newRows || []);
+  };
+  const stageOperation = ({ modalFunc, modalText }) => {
+    setModalFunction(modalFunc);
+    setModalText(modalText);
+    setModalVisible(true);
+  };
+  const executeCreateRandomIntervals = () => async () => {
+    const res = await createRandomIntervals();
+    const newIntervals = await interval_table.getAllRows();
+    console.log("newIntervals ", newIntervals.length);
+    dispatch({ type: "UPDATE_INTERVALS", intervals: newIntervals });
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: "RandomIntervals",
+        text2: "5 RandomIntervals creation complete ..",
+      },
+    });
+  };
+  const executePreloadHourlyIncomes = () => async () => {
+    const res = await preloadHourlyIncomes();
+    const newHourlyIncomes = await hourly_income_table.getAllRows();
+    console.log("newHourlyIncomes ", newHourlyIncomes.length);
+    dispatch({
+      type: "UPDATE_ITEMS",
+      items: newHourlyIncomes,
+      key: "hourlyIncomes",
+    });
+
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: "Hourly incomes",
+        text2: "Hourly incomes preloading complete ..",
+      },
+    });
+    setData(newHourlyIncomes);
+  };
+  const executePreloadOneTimeIncomes = () => async () => {
+    const res = await preloadOneTimeIncomes();
+    const newOneTimeIncomes = await one_time_income_table.getAllRows();
+    console.log("newOneTimeIncomes ", newOneTimeIncomes.length);
+    dispatch({
+      type: "UPDATE_ITEMS",
+      items: newOneTimeIncomes,
+      key: "oneTimeIncomes",
+    });
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: "OneTimeIncomes",
+        text2: "OneTimeIncomes preloading complete ..",
+      },
+    });
+    setData(newOneTimeIncomes);
+  };
+  const executePreloadOneTimeExpenses = () => async () => {
+    const res = await preloadOneTimeExpenses();
+    const OneTimeExpenses = await one_time_expense_table.getAllRows();
+    console.log("newOneTimeIncomes ", OneTimeExpenses.length);
+    dispatch({
+      type: "UPDATE_ITEMS",
+      items: OneTimeExpenses,
+      key: "oneTimeExpenses",
+    });
+    setModalVisible(false);
+    Toast.show({
+      ...defaultToastObj,
+      ...{
+        text1: "OneTime Expenses",
+        text2: "OneTime Expenses preloading complete ..",
+      },
+    });
+    setData(OneTimeExpenses);
+  };
+  const deleteAllRows = async (table, tableName = "table") =>
+    await table.deleteAllRows();
+
   const fetchSchema = async (table, tableName = "table") => {
     const schema = await table.getSchema();
     console.log(`schema ${tableName}  `, schema);
@@ -168,7 +443,7 @@ const AdminScreen = ({ navigation }) => {
   };
 
   const preloadHourlyIncomes = async () => {
-    console.log("preload HourlyIncomes ", default_HourlyIncomes.length);
+    console.log("preload Hourly Incomes ", default_HourlyIncomes.length);
     let successCount = 0;
     let failCount = 0;
     let alreadyExistsCount = 0;
@@ -177,7 +452,7 @@ const AdminScreen = ({ navigation }) => {
       HourlyIncome.color = getRandomColorVariation();
       HourlyIncome.rate = randomRoundedBetween(1200, 2500, 50);
       try {
-        const result = await hourly_income_table.getRowByField(
+        const result = await hourly_income_table.getFirstRowByField(
           "translation_key",
           HourlyIncome.translation_key
         );
@@ -204,14 +479,14 @@ const AdminScreen = ({ navigation }) => {
     if (successCount > 0) {
       Toast.show({
         type: "success",
-        text1: `${successCount} HourlyIncomes inserted successfully!`,
+        text1: `${successCount} Hourly Incomes inserted successfully!`,
       });
     }
 
     if (failCount > 0) {
       Toast.show({
         type: "error",
-        text1: `Failed to insert ${failCount} HourlyIncomes!`,
+        text1: `Failed to insert ${failCount} Hourly Incomes!`,
         text2: "Check logs for more details.",
       });
     }
@@ -219,11 +494,12 @@ const AdminScreen = ({ navigation }) => {
     if (alreadyExistsCount > 0) {
       Toast.show({
         type: "info",
-        text1: `${alreadyExistsCount} HourlyIncomes already exist.`,
-        text2: "No new HourlyIncomes were added for these.",
+        text1: `${alreadyExistsCount} Hourly Incomes already exist.`,
+        text2: "No new Hourly Incomes were added for these.",
       });
     }
   };
+
   const preloadOneTimeIncomes = async () => {
     console.log("default_OneTimeIncomes ", default_OneTimeIncomes.length);
     let successCount = 0;
@@ -232,7 +508,7 @@ const AdminScreen = ({ navigation }) => {
 
     for (let OneTimeIncome of default_OneTimeIncomes) {
       try {
-        const result = await one_time_income_table.getRowByField(
+        const result = await one_time_income_table.getFirstRowByField(
           "description",
           OneTimeIncome.description
         );
@@ -250,7 +526,7 @@ const AdminScreen = ({ navigation }) => {
         }
       } catch (error) {
         console.error(
-          `Failed to insert HourlyIncome ${OneTimeIncome.description}:`,
+          `Failed to insert OneTimeIncome ${OneTimeIncome.description}:`,
           error
         );
         failCount++;
@@ -261,14 +537,14 @@ const AdminScreen = ({ navigation }) => {
     if (successCount > 0) {
       Toast.show({
         type: "success",
-        text1: `${successCount} HourlyIncomes inserted successfully!`,
+        text1: `${successCount} OneTimeIncomes inserted successfully!`,
       });
     }
 
     if (failCount > 0) {
       Toast.show({
         type: "error",
-        text1: `Failed to insert ${failCount} HourlyIncomes!`,
+        text1: `Failed to insert ${failCount} Hourly Incomes!`,
         text2: "Check logs for more details.",
       });
     }
@@ -276,11 +552,12 @@ const AdminScreen = ({ navigation }) => {
     if (alreadyExistsCount > 0) {
       Toast.show({
         type: "info",
-        text1: `${alreadyExistsCount} HourlyIncomes already exist.`,
-        text2: "No new HourlyIncomes were added for these.",
+        text1: `${alreadyExistsCount} OneTimeIncomes already exist.`,
+        text2: "No new OneTimeIncomes were added for these.",
       });
     }
   };
+
   const preloadOneTimeExpenses = async () => {
     console.log("default_OneTime Expenses ", default_OneTimeExpenses.length);
     let successCount = 0;
@@ -289,7 +566,7 @@ const AdminScreen = ({ navigation }) => {
 
     for (let OneTimeExpense of default_OneTimeExpenses) {
       try {
-        const result = await one_time_expense_table.getRowByField(
+        const result = await one_time_expense_table.getFirstRowByField(
           "description",
           OneTimeExpense.description
         );
@@ -338,26 +615,35 @@ const AdminScreen = ({ navigation }) => {
       });
     }
   };
-  const table_map = {
-    hourly_income_table: hourly_income_table,
-    settings_table: settings_table,
-    interval_table: interval_table,
-    event_table: event_table,
-    one_time_income_table: one_time_income_table,
-    one_time_expense_table: one_time_expense_table,
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Select Table:</Text>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Button onPress={() => setData(ctx)} shape="pill">
+          Show ctx
+        </Button>
         <Picker
           selectedValue={selectedTable}
           style={{ height: 50, width: 200 }}
-          onValueChange={(itemValue, itemIndex) => setSelectedTable(itemValue)}
+          onValueChange={(itemValue, itemIndex) => {
+            setSelectedTable(itemValue)
+            if (table_map[itemValue]) getAllRows(table_map[itemValue], itemValue)
+            
+          }}
         >
+          <Picker.Item label="Select table" value={null} />
           <Picker.Item label="Settings Table" value="settings_table" />
-          <Picker.Item label="HourlyIncome Table" value="hourly_income_table" />
+          <Picker.Item
+            label="Hourly Income Table"
+            value="hourly_income_table"
+          />
           <Picker.Item label="Interval Table" value="interval_table" />
           <Picker.Item label="Event Table" value="event_table" />
           <Picker.Item
@@ -370,76 +656,148 @@ const AdminScreen = ({ navigation }) => {
           />
         </Picker>
       </View>
-      <View
-        style={{
-          alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
-        <Button onPress={() => setData(ctx)} shape="pill">
-          Show ctx
-        </Button>
-        <Button
-          onPress={() => fetchSchema(table_map[selectedTable], selectedTable)}
-          shape="pill"
-        >
-          Get schema
-        </Button>
-        <Button
-          onPress={() => getAllRows(table_map[selectedTable], selectedTable)}
-          shape="pill"
-        >
-          Get all rows
-        </Button>
-      </View>
-      <View
-        style={{
-          alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
-        {selectedTable === "hourly_income_table" && (
-          <Button onPress={preloadHourlyIncomes} shape="pill">
-            Preload HourlyIncomes
-          </Button>
-        )}
-        {selectedTable === "one_time_income_table" && (
-          <Button onPress={preloadOneTimeIncomes} shape="pill">
-            preloadOneTimeIncomes
-          </Button>
-        )}
-        {selectedTable === "one_time_expense_table" && (
-          <Button onPress={preloadOneTimeExpenses} shape="pill">
-            preloadOneTimeExpenses
-          </Button>
-        )}
-        {selectedTable === "interval_table" && (
-          <Button onPress={createRandomIntervals} shape="pill">
-            Preload intervals
-          </Button>
-        )}
+      {selectedTable && (
+        <View>
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Button
+              onPress={() =>
+                fetchSchema(table_map[selectedTable], selectedTable)
+              }
+              shape="pill"
+            >
+  Schema
+            </Button>
+            <Button
+              onPress={() =>
+                getAllRows(table_map[selectedTable], selectedTable)
+              }
+              shape="pill"
+            >
+              All rows
+            </Button>
+          </View>
+          <View
+            style={{
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            {selectedTable === "hourly_income_table" && (
+              <Button
+                onPress={() =>
+                  stageOperation({
+                    modalFunc: executePreloadHourlyIncomes,
+                    modalText: "Preload data for Hourly Incomes?",
+                  })
+                }
+                shape="pill"
+              >
+                Preload Hourly Incomes
+              </Button>
+            )}
+            {selectedTable === "one_time_income_table" && (
+              <Button
+                onPress={() =>
+                  stageOperation({
+                    modalFunc: executePreloadOneTimeIncomes,
+                    modalText: "Preload data for One Time Incomes?",
+                  })
+                }
+                shape="pill"
+              >
+                Preload One Time Incomes
+              </Button>
+            )}
+            {selectedTable === "one_time_expense_table" && (
+              <Button
+                onPress={() =>
+                  stageOperation({
+                    modalFunc: executePreloadOneTimeExpenses,
+                    modalText: "Preload data forOneTime Expenses?",
+                  })
+                }
+                shape="pill"
+              >
+                Preload One Time Expenses
+              </Button>
+            )}
+            {selectedTable === "interval_table" && (
+              <Button
+                onPress={() =>
+                  stageOperation({
+                    modalFunc: executeCreateRandomIntervals,
+                    modalText: "Create 5 random intervals?",
+                  })
+                }
+                shape="pill"
+              >
+                Create 5 Random intervals
+              </Button>
+            )}
+            {selectedTable === "event_table" && (
+              <Button
+                onPress={() =>
+                  stageOperation({
+                    modalFunc: executeCreateRandomEvents,
+                    modalText: "Create 50 random events?",
+                  })
+                }
+                shape="pill"
+              >
+                Create 50 dummy events for this year
+              </Button>
+            )}
+            <Button
+              onPress={() =>
+                stageOperation({
+                  modalFunc: executeDeleteAllRows,
+                  modalText: `Delete all rows for ${selectedTable}`,
+                })
+              }
+              shape="pill"
+            >
+              Delete all rows
+            </Button>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Button
+              onPress={() =>
+                stageOperation({
+                  modalFunc: executeTableReInit,
+                  modalText: `Reinit ${selectedTable}`,
+                })
+              }
+              shape="pill"
+            >
+              Reinitialize 
+            </Button>
+            <Button
+              onPress={() =>
+                stageOperation({
+                  modalFunc: executeTableDrop,
+                  modalText: `Drop (delete) ${selectedTable}`,
+                })
+              }
+              shape="pill"
+            >
+              Drop (delete) 
+            </Button>
 
-        <Button
-          onPress={() => deleteAllRows(table_map[selectedTable], selectedTable)}
-          shape="pill"
-        >
-          Delete all rows
-        </Button>
-        <Button
-          onPress={() => generateDummyEvents(50)}
-          shape="pill"
-        >
-          Create dummy events
-        </Button>
-        
-      </View>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Button onPress={() => setModalVisible(true)} shape="pill">
-          Reinitialize DB
-        </Button>
-        <Modal
+            {/* <Modal
           transparent={true}
           animationType="slide"
           visible={modalVisible}
@@ -475,8 +833,24 @@ const AdminScreen = ({ navigation }) => {
               </Button>
             </View>
           </View>
-        </Modal>
-      </View>
+        </Modal> */}
+          </View>
+
+          <ConfirmationModal
+            modalVisible={modalVisible}
+            onConfirm={() => modalFunction()}
+            onCancel={() => setModalVisible(false)}
+            confirmText="Confirm"
+            cancelText="Cancel"
+            message={modalText}
+          />
+          <Toast
+            style={{
+              elevation: 20, //Render the Toast component in your app's entry file, as the LAST CHILD in the View hierarchy
+            }}
+          />
+        </View>
+      )}
       <View>
         <JSONTree data={data} />
       </View>

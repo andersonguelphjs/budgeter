@@ -1,7 +1,7 @@
 import React from 'react';
 import { ButtonGroup } from '@rneui/themed';
 
-const ButtonSwitch = ({ buttons, multiple, selectedIndices, setSelectedIndices }) => {
+const ButtonSwitch = ({ buttons, multiple, selectedIndices, setSelectedIndices, currentTheme = {} }) => {
   const handlePress = (index) => {
     const button = buttons[index];
 
@@ -42,9 +42,11 @@ props eg
       selectMultiple={multiple}
       selectedIndexes={multiple ? selectedIndices : [selectedIndices].filter((i) => i !== null)}
       containerStyle={{ marginBottom: 20 }}
-      selectedButtonStyle={{ backgroundColor: 'blue' }}
-      buttonStyle={{ borderRadius: 0 }}
+      selectedButtonStyle={{ backgroundColor: currentTheme?.button || 'blue', borderWidth: 1, borderColor: 'black' }}
+      buttonStyle={{borderWidth: 1, borderColor: 'black'}}
       innerBorderStyle={{ width: 0 }}
+      textStyle={{ color: 'black'}}
+      selectedTextStyle={{ color: 'black'}}
     />
   );
 };

@@ -11,40 +11,44 @@ import { OneTimeIncomeSchema } from "../models/OneTimeIncome";
 import { OneTimeExpenseSchema } from "../models/OneTimeExpense";
 import { IntervalSchema } from "../models/Interval";
 import { EventSchema } from "../models/Events";
+import { themes } from "../constants/colors";
 import translation from "../assets/language/text.json";
 export const AppContext = createContext({
   currentLanguage: "en",
   categories: {},
   intervals: [],
   settings: {},
-  events: []
+  events: [],
+  themes: {}
 });
-const default_settings = {
-  language: "en",
-  numberOfLogins: 0,
-  lastLogin: new Date().toISOString(),
-  creation: new Date().toISOString(),
-  sound: 1,
-  theme: "LIGHT",
-  notifications: 1,
-  currency: "¥",
-  history_data: JSON.stringify([])
-}
+// const default_settings = {
+//   language: "en",
+//   numberOfLogins: 0,
+//   lastLogin: new Date().toISOString(),
+//   creation: new Date().toISOString(),
+//   sound: 1,
+//   theme: "LIGHT",
+//   notifications: 1,
+//   currency: "¥",
+//   history_data: JSON.stringify([]),
+//   theme: lightTheme,
+//   themeName : "LIGHT"
+// }
 
 const initialState = {
   categories: {},
   intervals: [],
   events: [],
   settings: {},
+  themes: themes,
 };
-
 
 const reducer = (state, action) => {
   // console.log(action)
   switch (action.type) {
 
     case "UPDATE_ITEMS":
-      return { ...state, ...{ categories, [action.key]: action.items || []} };
+      return { ...state, ...{ categories: {...state.categories , [action.key]: action.items || []}} };
     case "TOGGLE_SOUND":
       return { ...state, settings: {...state.settings, sound: action.sound || "ON" }};
     case "TOGGLE_CURRENCY":
@@ -52,7 +56,7 @@ const reducer = (state, action) => {
     case "TOGGLE_NOTIFICATIONS":
       return { ...state, settings: {...state.settings, notifications: action.notifications || "OFF" }};
     case "TOGGLE_THEME":
-      return { ...state, settings: {...state.settings, theme: action.theme || "LIGHT" }};
+      return { ...state, settings: {...state.settings, theme:action.theme || "LIGHT"  }};
     case "UPDATE_INTERVALS":
       return { ...state, intervals: action.intervals || [] };
     case "UPDATE_EVENTS":
@@ -82,31 +86,38 @@ const reducer = (state, action) => {
 const AppContextProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [authToken, setAuthToken] = useState();
+  const [isDark, setIsDark] = useState(false);
   const { playSound } = useSoundPlayer();
   const { sql_table: settings_table } = useSQLLiteDatabase({
     table: "settings",
+    db_name: "shufu_budgeter",
     desiredSchema: SettingsSchema,
   });
 
   const { sql_table: hourly_income_table } = useSQLLiteDatabase({
     table: "HourlyIncome",
+    db_name: "shufu_budgeter",
     desiredSchema: HourlyIncomeSchema,
   });
   const { sql_table: one_time_income_table } = useSQLLiteDatabase({
     table: "OneTimeIncome",
+    db_name: "shufu_budgeter",
     desiredSchema: OneTimeIncomeSchema,
   });  
   const { sql_table: one_time_expense_table } = useSQLLiteDatabase({
     table: "OneTimeExpense",
+    db_name: "shufu_budgeter",
     desiredSchema: OneTimeExpenseSchema,
   });  
   const { sql_table: interval_table } = useSQLLiteDatabase({
     table: "interval",
+    db_name: "shufu_budgeter",
     desiredSchema: IntervalSchema,
   });
 
   const { sql_table: event_table } = useSQLLiteDatabase({
     table: "event",
+    db_name: "shufu_budgeter",
     desiredSchema: EventSchema,
   });
 
