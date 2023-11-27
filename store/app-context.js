@@ -21,19 +21,18 @@ export const AppContext = createContext({
   events: [],
   themes: {}
 });
-// const default_settings = {
-//   language: "en",
-//   numberOfLogins: 0,
-//   lastLogin: new Date().toISOString(),
-//   creation: new Date().toISOString(),
-//   sound: 1,
-//   theme: "LIGHT",
-//   notifications: 1,
-//   currency: "¥",
-//   history_data: JSON.stringify([]),
-//   theme: lightTheme,
-//   themeName : "LIGHT"
-// }
+const default_settings = {
+  language: "en",
+  numberOfLogins: 0,
+  lastLogin: new Date().toISOString(),
+  creation: new Date().toISOString(),
+  sound: 1,
+  theme: "LIGHT",
+  notifications: 1,
+  currency: "¥",
+  history_data: JSON.stringify([]),
+  theme: "LIGHT",
+}
 
 const initialState = {
   categories: {},

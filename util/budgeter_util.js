@@ -19,7 +19,7 @@ export const getTypeArrayKey = (event_type_key) => {
 
 export const getFilteredMarkedDates = (markedDates = {}, selectedType) => {
   const filteredMarkedDates = {};
-  console.log("getFilteredMarkedDates ", Object.keys(markedDates).length)
+  //console.log("getFilteredMarkedDates ", Object.keys(markedDates).length)
 
   Object.keys(markedDates).forEach((date) => {
     const eventsForDay = markedDates[date].dots || [];
@@ -34,6 +34,6 @@ export const getFilteredMarkedDates = (markedDates = {}, selectedType) => {
       };
     }
   });
-  console.log("filteredMarkedDates", filteredMarkedDates);
+  //console.log("filteredMarkedDates", filteredMarkedDates);
   return filteredMarkedDates;
 };

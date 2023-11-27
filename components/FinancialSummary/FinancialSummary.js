@@ -2,20 +2,19 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { calculateTotal } from "../../util/math";
 import { getTypeArrayKey } from "../../util/budgeter_util";
+import { useCustomStyles } from "../../hooks/use-custom-style";
 
 const FinancialSummaryTable = (props) => {
   const { events, hourlyIncomes, oneTimeExpenses, oneTimeIncomes, intervals, currentTheme= {} } =
     props;
   // Aggregate data by month/year.
+  const customStyles = useCustomStyles();
   const aggregatedData = {};
   const styles = StyleSheet.create({
     table: {
-      color: currentTheme.text || "black",
-      borderWidth: 1,
-      borderColor: "#ddd",
-      borderRadius: 5,
-      overflow: "hidden", // This ensures the border radius is applied to child components
-      backgroundColor: currentTheme.background || "#fff",
+      borderBottomWidth: 1,
+      borderTopWidth: 1,
+      borderColor: "black"
     },
     tableRow: {
       flexDirection: "row",
@@ -27,7 +26,7 @@ const FinancialSummaryTable = (props) => {
     tableHeaderRow: {
       flexDirection: "row",
       borderBottomWidth: 1,
-      borderColor: "#ddd",
+      borderColor: "black",
       padding: 10,
       backgroundColor : currentTheme.accent
     },
@@ -48,16 +47,16 @@ const FinancialSummaryTable = (props) => {
     },
   });
   events.forEach((event) => {
-    console.log("evemt", event);
+    //e.log("evemt", event);
     const { event_type_key, date, interval_id, type, amount } = event;
     const eventDate = new Date(date);
     const key = `${eventDate.getMonth() + 1}/${eventDate.getFullYear()}`;
 
     const typeKey = getTypeArrayKey(event_type_key);
-    console.log("typeKe ", event_type_key, typeKey);
+    //console.log("typeKe ", event_type_key, typeKey);
     const items = props[typeKey];
     const item = items.find((i) => i.id == event[event_type_key]);
-    console.log("item ", item);
+    //console.log("item ", item);
     const intervalItem =
       (event_type_key === "hourly_income_id" &&
         intervals.find((i) => i.id === interval_id)) ||
@@ -83,7 +82,7 @@ const FinancialSummaryTable = (props) => {
         )) ||
       amount ||
       0;
-    console.log("event.tyo ", type, item, total);
+    //console.log("event.tyo ", type, item, total);
     aggregatedData[key][type] += total;
   });
 
@@ -114,7 +113,7 @@ const FinancialSummaryTable = (props) => {
     const [month, year] = str.split("/");
     return new Date(year, month - 1); // months are 0-indexed in JavaScript Date
   };
-  console.log("rows", rows);
+  //console.log("rows", rows);
   // Render the table.
   return (
     <View style={styles.table}>

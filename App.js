@@ -6,12 +6,10 @@ import AppContextProvider from "./store/app-context";
 
 const App = () => {
   const styles = StyleSheet.create({
-    // Assuming your other styles remain the same
     container: {
       flex: 1,
       paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
       marginTop: 10,
-      // Rest of your styles...
     },
   });
   return (

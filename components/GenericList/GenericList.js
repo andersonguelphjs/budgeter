@@ -5,39 +5,62 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  ScrollView,
+  Dimensions
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import Button from "../ui/Button";
 import ConfirmationModal from "../ui/ConfirmationModal";
 import Toast from "react-native-toast-message";
 import _ from "lodash";
 import { defaultToastObj } from "../../util/ui";
-const GenericList = ({
-  itemKey,
-  title,
-  items,
-  table,
-  translation,
-  dispatch,
-  playSoundFile,
-  onItemDelete,
-  state,
-  amountOrRate,
-  placeholderText,
-  text_key,
-  foreign_key,
-  modalText = "Delet this item?",
-  currentTheme
-}) => {
+const GenericList = (props) => {
+  
+  const {
+    itemKey,
+    title,
+    items,
+    table,
+    translation,
+    dispatch,
+    playSoundFile,
+    onItemDelete,
+    state,
+    amountOrRate,
+    placeholderText,
+    text_key,
+    foreign_key,
+    modalText = "Delete this item?",
+    currentTheme,
+    showingList,
+    updateShowingList
+  } = props
+ //console.log("loaded ", title, typeof updateShowingList)
+
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    //console.log("Title ", title)
+    updateShowingList(title !== showingList && title || "")
+  };
+  useEffect(() => {
+    //console.log("useffect ", title)
+    setIsCollapsed(showingList !== title);
+  },[setIsCollapsed,showingList,updateShowingList,isCollapsed])
+
+
+  const screenHeight = Dimensions.get('window').height;
   const styles = StyleSheet.create({
     container: {
-   
+    
     },
     collapseButton: {
   
     },
     collapseButtonText: {
-      color: currentTheme.text
+      color: currentTheme.text,
+      fontSize: 22
     },
     listContent: {
       padding: 10, // Space around the FlatList items
@@ -74,17 +97,22 @@ const GenericList = ({
     },
     inputContainer: {
       flexDirection: "row",
-      padding: 0,
+      margin: 10,
+      padding: 10,
       backgroundColor: "#fff",
       borderRadius: 10,
     },
     input: {
       flex: 1,
-      padding: 10,
       borderWidth: 1,
       borderColor: "#ddd",
       borderRadius: 10,
       marginRight: 10,
+      borderWidth: 1,
+      borderColor: 'gray',
+      // Reduce padding to lower space inside the input
+      paddingVertical: 0, // Smaller value = less space on top and bottom
+      paddingHorizontal: 10,
     },
     addButton: {
       padding: 10,
@@ -96,12 +124,6 @@ const GenericList = ({
       fontWeight: "bold",
     },
   });
-
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   const debouncedUpdate = _.debounce(table.updateRow, 3000); // 3000 milliseconds = 3 seconds
 
   const { settings } = state;
@@ -111,6 +133,10 @@ const GenericList = ({
   const [editIndex, setEditIndex] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  useEffect(() => {
+    console.log("useffect editIndex ", editIndex)
+    if (typeof editIndex === 'number') setTimeout(() => setEditIndex(null) , 3000)
+  },[editIndex])
 
   const initiateDeleteItem = (item) => {
     setSelectedItem(item);
@@ -121,7 +147,7 @@ const GenericList = ({
     setSelectedItem(null);
   };
 
-  console.log("selectedItem ", selectedItem);
+  //console.log("selectedItem ", selectedItem);
   
   const deleteItem = async () => {
     if (!selectedItem) return;
@@ -140,21 +166,22 @@ const GenericList = ({
       onItemDelete(obj);
     }
     closeModal();
-    Toast.show(defaultToastObj);
+    //Toast.show(defaultToastObj);
   };
 
-  const startEditing = (index) => {
-    setEditIndex(index);
-  };
+  // const startEditing = (index) => {
+  //   setEditIndex(index);
+  // };
 
-  const editExistingText = async (text) => {
+  const editExistingText = async (text, index) => {
+    console.log("editIndex", index);
     const newItems = [...items];
-    newItems[editIndex].description = text;
-    dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey });
+    newItems[index].description = text;
+    //dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey });
 ;
     try {
-      const result = await debouncedUpdate(newItems[editIndex].id, {
-        description: newItems[editIndex].description,
+      const result = await debouncedUpdate(newItems[index].id, {
+        description: newItems[index].description,
       });
       console.log("update text result ", result);
       playSoundFile(null, 4);
@@ -164,17 +191,19 @@ const GenericList = ({
     // setEditIndex(null); // Close the editor
   };
 
-  const editRate = async (type, text) => {
+  const editRate = async (type, text, index) => {
     const newItems = [...items];
-
-    newItems[editIndex][amountOrRate] = text;
+    console.log("edit rate" , index, amountOrRate)
+    console.log("edit rate2" , index, newItems[index])
+    newItems[index][amountOrRate] = text;
     dispatch({ type: "UPDATE_ITEMS", items: newItems, key: itemKey });
 
     try {
-      const result = await debouncedUpdate(newItems[editIndex].id, {
-        [amountOrRate]: newItems[editIndex][amountOrRate],
+      const result = await debouncedUpdate(newItems[index].id, {
+        [amountOrRate]: newItems[index][amountOrRate],
       });
-      console.log("HourlyIncome update editRate result ", result);
+      console.log("update editRate result ", result);
+      setEditIndex(index)
       playSoundFile(null, 4);
     } catch (error) {
       console.error("An error occurred:", error);
@@ -189,17 +218,17 @@ const GenericList = ({
       description: newItem,
       color: newColor,
       type: "expense",
-      [amountOrRate]: newRate || 0,
+      [amountOrRate]: +newRate || 0,
     };
     console.log("adding new item ", itemToAdd);
     const result = await table.createNewRow(itemToAdd);
     console.log("add result ", result);
     playSoundFile(null, 2);
     console.log("result", result);
-    // setItems((currentItems) => [...currentItems, { id: result, ...itemToAdd }]);
+    // setItems((items) => [...items, { id: result, ...itemToAdd }]);
     dispatch({
       type: "UPDATE_ITEMS",
-      items: [...currentItems, { id: result, ...itemToAdd }],
+      items: [...items, { id: result, ...itemToAdd }],
       key: itemKey,
     });
     setNewItem("");
@@ -232,33 +261,28 @@ const GenericList = ({
         </Text>
       </TouchableOpacity>
       {!isCollapsed && (
-        <View>
-          <View style={styles.listContent}>
+        <View style={{ maxHeight: screenHeight * 0.6 }}>
+          <ScrollView style={styles.listContent}>
             {items.map((item, index) => {
-              const isEditing = editIndex === index;
-              const amountOrRate = item.type === "expense" ? "amount" : "rate";
+
 
               return (
                 <View key={index} style={styles.listItemContainer}>
-                  {isEditing ? (
+
                     <TextInput
                       style={styles.itemInput}
                       value={item.description}
                       onChangeText={(text) => editExistingText(text, index)}
                     />
-                  ) : (
-                    <Text style={styles.itemText}>{item.description}</Text>
-                  )}
-                  {isEditing ? (
+
+
                     <TextInput
                       style={styles.itemInput}
                       keyboardType="numeric"
                       value={String(item[amountOrRate] || "")}
                       onChangeText={(text) => editRate(item.type, text, index)}
                     />
-                  ) : (
-                    <Text style={styles.itemText}>{item[amountOrRate]}</Text>
-                  )}
+
                   <View style={styles.iconsContainer}>
                     <TouchableOpacity
                       style={[
@@ -270,28 +294,13 @@ const GenericList = ({
                     <TouchableOpacity
                       onPress={() => initiateDeleteItem(item.id, index)}
                     >
-                      <Ionicons name="trash-outline" size={24} color="red" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() =>
-                        isEditing ? setEditIndex(null) : startEditing(index)
-                      }
-                    >
-                      <Ionicons
-                        name={
-                          isEditing
-                            ? "checkmark-circle-outline"
-                            : "create-outline"
-                        }
-                        size={24}
-                        color="blue"
-                      />
+                      <Ionicons name={index === editIndex? "md-checkmark": "trash-outline"} size={24} color="red" />
                     </TouchableOpacity>
                   </View>
                 </View>
               );
             })}
-          </View>
+          </ScrollView>
 
           {/* Input field and Add button */}
           <View style={styles.inputContainer}>
@@ -320,11 +329,11 @@ const GenericList = ({
             cancelText="Cancel"
             message={modalText}
           />
-          <Toast
+          {/* <Toast
             style={{
               elevation: 20, //Render the Toast component in your app's entry file, as the LAST CHILD in the View hierarchy
             }}
-          />
+          /> */}
         </View>
       )}
     </View>

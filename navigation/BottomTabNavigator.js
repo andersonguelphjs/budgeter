@@ -13,6 +13,14 @@ const BottomTabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         // headerShown: route.name === "Settings",
+        tabBarActiveTintColor: "tomato",
+        tabBarInactiveTintColor: "gray",
+        tabBarStyle: [
+          {
+            "display": "flex"
+          },
+          null
+        ],
         tabBarShowLabel: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -34,10 +42,10 @@ const BottomTabNavigator = () => {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
-      tabBarOptions={{
-        activeTintColor: "tomato",
-        inactiveTintColor: "gray",
-      }}
+      // tabBarOptions={{
+      //   activeTintColor: "tomato",
+      //   inactiveTintColor: "gray",
+      // }}
     >
       <Tab.Screen name="Settings" component={SettingsScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />

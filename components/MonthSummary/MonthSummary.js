@@ -28,9 +28,6 @@ const MonthSummary = ({ markedDates, selectedType }) => {
       alignItems: "center",
       paddingBottom: 20,
     },
-    tableContainer: {
-      // ...any other styling for the table container
-    },
   });
   useEffect(() => {
     if (!markedDates) {
@@ -211,17 +208,16 @@ const MonthSummary = ({ markedDates, selectedType }) => {
       <View style={styles.chartContainer}>
         {extractedData && <MyPieChart tableData={extractedData} />}
       </View>
-      <View style={styles.tableContainer}>
+      
         {data && (
           <MonthTable
-            currentTheme={currentTheme}
             properties={properties}
             headerText={headerText}
             data={data}
             styleConfig={{}}
           />
         )}
-      </View>
+
     </ScrollView>
   );
 };

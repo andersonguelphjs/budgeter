@@ -70,46 +70,38 @@ const CalendarScreen = () => {
       backgroundColor: currentTheme.background,
       color: currentTheme.text,
     },
-    chooseADayText: {
+    textCentered: {
       textAlign: "center",
       backgroundColor: currentTheme.button,
       padding: 10,
       borderWidth: 1,
-      borderColor: 'black'
-    },
-    addEventText: {
-      textAlign: "center",
-      backgroundColor: currentTheme.button,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: 'black'
+      borderColor: 'black',
     },
     hidden: {
       display: "none",
     },
     horizontalLayout: {
-      flexDirection: "row", // this makes children align horizontally
-      alignItems: "center", // this centers them vertically
-      justifyContent: "flex-start", // this aligns items to the start of the parent container
-      marginVertical: 10, // add margin if needed
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      marginVertical: 10,
     },
     label: {
-      marginRight: 10, // space between label and input
-      // ... other styles for the label ...
+      marginHorizontal: 8,
     },
     input: {
-      flex: 1, // this makes the input take up the remaining space
-      height: 40, // or other height as needed
-      // ... other styles for the input ...
+      flex: 1,
+      height: 40,
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 5,
+      padding: 10,
     },
     switchContainer: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      marginVertical: 10, // add some margin at the top and bottom if needed
-    },
-    label: {
-      marginHorizontal: 8, // changed from margin to marginHorizontal for specificity
+      marginVertical: 10,
     },
     itemContainer: {
       flexDirection: "row",
@@ -128,39 +120,83 @@ const CalendarScreen = () => {
       borderRadius: 5,
       justifyContent: "space-between",
       alignItems: "center",
-      // additional styling...
     },
     addEventContainer: {
+      backgroundColor: 'white',
+      margin: 10,
       padding: 15,
-      backgroundColor: currentTheme.background,
-      color: currentTheme.text,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 5,
       borderWidth: 1,
-      borderColor: 'black'
+      borderColor: 'black',
     },
     addButton: {
       backgroundColor: "#4CAF50",
       padding: 10,
       opacity: 1,
       borderWidth: 1,
-      borderColor: 'black'
-      // additional styling...
+      borderColor: 'black',
+      borderRadius: 5,
+      alignItems: 'center',
+      margin: 10,
     },
     addButtonText: {
       color: "#fff",
       textAlign: "center",
-      // additional styling...
+      fontSize: 16,
     },
     disabledButton: {
+      backgroundColor: "grey",
       padding: 10,
-      // Maybe grey it out, or make it more transparent
-      backgroundColor: "grey", // or whatever you prefer
-      // ... other styles ...
+      borderWidth: 1,
+      borderColor: 'black',
+      borderRadius: 5,
+      alignItems: 'center',
+      margin: 10,
     },
     disabledButtonText: {
       textAlign: "center",
-      color: "darkgrey", // or whatever you prefer
+      color: "darkgrey",
+      fontSize: 16,
     },
+    multilineInput: {
+      height: 100,
+    },
+    chooseADayText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: currentTheme.text || 'black',
+      backgroundColor: currentTheme.background || 'white',
+      textAlign: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ddd',
+      marginBottom: 5
+    },
+    addEventText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: currentTheme.text || 'black',
+      backgroundColor: currentTheme.background || 'white',
+      textAlign: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ddd',
+      marginBottom: 5
+    },
+  
   });
+  
 
   useEffect(() => {
     const performDBReinit = async () => {
@@ -350,7 +386,7 @@ const CalendarScreen = () => {
     // ... other styling properties
   }
   const filteredMarkedDates = getFilteredMarkedDates(markedDates, selectedType);
-  //console.log("selectedType", selectedType, incomeType);
+  console.log("selectedType", selectedType, incomeType, oneTimeExpense, amount);
   const incomeDisabled =
     selectedType === "income" &&
     ((incomeType === "hourly" && (!hourlyIncome || !interval)) ||
@@ -364,7 +400,7 @@ const CalendarScreen = () => {
     (selectedType === "expense" && (!oneTimeExpense || !amount));
   //console.log("addButtonsDisabled", addButtonDisabled)
   
- console.log("tehem ", theme, isDarkMode)
+
   return (
     <ScrollView style={styles.container}>
       <ButtonSwitch
@@ -373,6 +409,13 @@ const CalendarScreen = () => {
         multiple={false}
         selectedIndices={selectedIndex}
         setSelectedIndices={setSelectedIndex}
+      />
+      <Calendar
+        markedDates={filteredMarkedDates}
+        markingType={"multi-dot"}
+        onDayPress={handleDayPress}
+        onMonthChange={clearSelections}
+        theme={calendarTheme}
       />
       {selectedDay && filteredMarkedDates[selectedDay.dateString]?.dots && (
         <EventsForSelectedDay
@@ -386,16 +429,6 @@ const CalendarScreen = () => {
           styles={styles} // if `styles` is not global, you should pass it through
         />
       )}
-      <Calendar
-        markedDates={filteredMarkedDates}
-        markingType={"multi-dot"}
-        onDayPress={handleDayPress}
-        onMonthChange={clearSelections}
-        theme={calendarTheme}
-      />
-      {(Object.keys(selectedDay).length === 0 && (
-        <Text style={styles.chooseADayText}>Select a day</Text>
-      )) || <Text style={styles.addEventText}>Event to add details</Text>}
       {Object.keys(selectedDay).length > 0 && (
         <EventAdd
           currentTheme={currentTheme}

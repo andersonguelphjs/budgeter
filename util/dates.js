@@ -36,14 +36,8 @@ export const convertToCalendarEvents = (config) => {
     const eventDot = {...event, ...{
       key: `${timestamp}_${index}`,
       color: color,
-      dot: {
-        width: 14,
-        height: 14,
-        marginTop: 1,
-        marginHorizontal: 1,
-        borderRadius: 2,
-        opacity: 0
-      },
+      width: 10,
+      height: 10,
       day: {
         dateString: date,
         day: new Date(timestamp).getUTCDate(),
@@ -60,4 +54,25 @@ export const convertToCalendarEvents = (config) => {
 
   return calendarEvents;
 };
+
+export const getDateWithOffset =(fromDate, monthOffset = -1, dayOffset = 0) =>{
+  if (!(fromDate instanceof Date)) {
+    console.error("Invalid input: fromDate must be a Date object.");
+    return;
+  }
+
+  let newDate = new Date(
+    fromDate.getFullYear(),
+    fromDate.getMonth() + monthOffset,
+    fromDate.getDate() + dayOffset
+  );
+
+  // Adjust for cases where the new month doesn't have the specified day
+  while (newDate.getMonth() !== (fromDate.getMonth() + monthOffset + 12) % 12) {
+    newDate.setDate(newDate.getDate() - 1);
+  }
+
+  return newDate;
+}
+
 

@@ -1,4 +1,6 @@
 import React, { useContext, useState } from "react";
+import Toast from "react-native-toast-message";
+import { defaultToastObj } from "../util/ui";
 import {
   View,
   ScrollView,
@@ -40,6 +42,7 @@ const SettingsScreen = ({ navigation }) => {
     },
     headerTitle: {
       color: currentTheme.text,
+      fontSize: 22,
     },
     settingRow: {
       flexDirection: "row",
@@ -50,10 +53,14 @@ const SettingsScreen = ({ navigation }) => {
       marginTop: 15,
     },
   });
-
+  const [showingList, setShowingList] = useState("");
+  const updateShowingList = (listName) => {
+    console.log("updateShowingList ", listName);
+    setShowingList(listName || "");
+  };
   const deleteCategoryAndDependencies = async (config) => {
     const { item, foreign_key, table, categories_key, category_items } = config;
-    console.log("deleteCategoryAndDependencies ", config)
+    console.log("deleteCategoryAndDependencies ", config);
     const related_events = await event_table.getAllRowsByField(
       foreign_key,
       +item
@@ -75,20 +82,20 @@ const SettingsScreen = ({ navigation }) => {
     console.log(
       `(state) before delete current ${categories_key}  ${category_items.length}`
     );
-    const newItems = [...category_items].filter((i) => i.id != item);;
-    const newEvents  = [...events].filter((i) => i[foreign_key] != item);;
+    const newItems = [...category_items].filter((i) => i.id != item);
+    const newEvents = [...events].filter((i) => i[foreign_key] != item);
     console.log(
       `(state) after remove item with id ${item}, new ${categories_key} length: ${newItems.length}`
     );
     console.log(`(state) before delete, events length: ${events.length}`);
-    if (categories_key === "intervals"){
-      dispatch({ type: "UPDATE_INTERVALS", intervals: newItems});
-    }
-    else{
+    if (categories_key === "intervals") {
+      dispatch({ type: "UPDATE_INTERVALS", intervals: newItems });
+    } else {
       dispatch({ type: "UPDATE_ITEMS", items: newItems, key: categories_key });
     }
 
     dispatch({ type: "UPDATE_EVENTS", events: newEvents });
+    Toast.show(defaultToastObj);
   };
 
   return (
@@ -99,6 +106,8 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.settingsRow}>
         {/* <HourlyIncomeList /> */}
         <GenericList
+          showingList={showingList}
+          updateShowingList={updateShowingList}
           itemKey={"hourlyIncomes"}
           currentTheme={currentTheme}
           title={"Hourly Incomes"}
@@ -108,7 +117,7 @@ const SettingsScreen = ({ navigation }) => {
           dispatch={dispatch}
           playSoundFile={playSoundFile}
           state={state}
-          amountOrRate={"rate"}
+          amountOrRate="rate"
           placeholderText={"hourly_wage"}
           text_key={"hourly_wage"}
           foreign_key="hourly_income_id"
@@ -121,6 +130,8 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.settingsRow}>
         {/* <HourlyIncomeList /> */}
         <GenericList
+          showingList={showingList}
+          updateShowingList={updateShowingList}
           itemKey={"oneTimeIncomes"}
           currentTheme={currentTheme}
           title={"One Time Incomes"}
@@ -130,7 +141,7 @@ const SettingsScreen = ({ navigation }) => {
           dispatch={dispatch}
           playSoundFile={playSoundFile}
           state={state}
-          amountOrRate={"amount"}
+          amountOrRate="amount"
           placeholderText={"income"}
           text_key={"income"}
           foreign_key="one_time_income_id"
@@ -142,6 +153,8 @@ const SettingsScreen = ({ navigation }) => {
       </View>
       <View style={styles.settingsRow}>
         <GenericList
+          showingList={showingList}
+          updateShowingList={updateShowingList}
           itemKey={"oneTimeExpenses"}
           currentTheme={currentTheme}
           title={"One Time Expenses"}
@@ -151,7 +164,7 @@ const SettingsScreen = ({ navigation }) => {
           dispatch={dispatch}
           playSoundFile={playSoundFile}
           state={state}
-          amountOrRate={"amount"}
+          amountOrRate="amount"
           placeholderText={"expense"}
           text_key={"expense"}
           foreign_key="one_time_expense_id"
@@ -162,15 +175,21 @@ const SettingsScreen = ({ navigation }) => {
         />
       </View>
       <View style={styles.settingsRow}>
-        <IntervalList 
+        <IntervalList
+          showingList={showingList}
+          updateShowingList={updateShowingList}
           foreign_key="interval_id"
-          modalText={
-            "Delete interval?\n\nThis will delete all related events"
-          }
+          title={"Shifts"}
+          modalText={"Delete interval?\n\nThis will delete all related events"}
           onItemDelete={deleteCategoryAndDependencies}
         />
       </View>
       <MiscSettings
+        showingList={showingList}
+        updateShowingList={updateShowingList}
+        itemKey={"hourlyIncomes"}
+        currentTheme={currentTheme}
+        title={"Other settings"}
         settings_table={settings_table}
         language={language}
         dispatch={dispatch}
@@ -178,9 +197,13 @@ const SettingsScreen = ({ navigation }) => {
         theme={theme}
         notifications={notifications}
         currency={currency}
-        currentTheme={currentTheme}
         styles={styles}
         id={id}
+      />
+            <Toast
+        style={{
+          elevation: 20, //Render the Toast component in your app's entry file, as the LAST CHILD in the View hierarchy
+        }}
       />
     </ScrollView>
   );

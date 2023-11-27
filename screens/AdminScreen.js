@@ -1,4 +1,6 @@
 import React, { useContext, useState } from "react";
+import { Platform } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { View, ScrollView, StyleSheet, Text, Modal, Alert } from "react-native";
 import Button from "../components/ui/Button";
 import { AppContext } from "../store/app-context";
@@ -26,7 +28,8 @@ const AdminScreen = ({ navigation }) => {
     onPress: () => console.log("Toast pressed"),
   };
   const [selectedTable, setSelectedTable] = useState(null);
-  const [data, setData] = useState("make a query");
+  const defaultMsg = "make a query"
+  const [data, setData] = useState(defaultMsg);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalFunction, setModalFunction] = useState(() =>
     console.log("modal function")
@@ -619,17 +622,36 @@ const AdminScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+        // style={{
+        //   flex: 1,
+        //   flexDirection: "row",
+        //   justifyContent: "center",
+        //   alignItems: "center",
+        // }}
       >
         <Button onPress={() => setData(ctx)} shape="pill">
           Show ctx
         </Button>
-        <Picker
+        <RNPickerSelect
+          onValueChange={(itemValue, itemIndex) => {
+            setSelectedTable(table_map[itemValue] ? itemValue : null)
+            table_map[itemValue] ? getAllRows(table_map[itemValue], itemValue) : setData(defaultMsg)
+            
+          }}
+            items={[
+                { label: 'Settings Table', value: 'settings_table' },
+                { label: 'Interval Table', value: 'interval_table' },
+                { label: 'Hourly Income Table', value: 'hourly_income_table'},
+                { label: 'One Time Income Table', value: 'one_time_income_table' },
+                { label: 'One Time Expense Table', value: 'one_time_expense_table' },
+                { label: 'Settings Table', value: 'settings_table' },
+                { label: 'Event Table', value: 'event_table' },
+                // ... other items
+            ]}
+            style={{ paddingBottom: 10 }}
+        />
+        {/* <Picker
+          zIndex: Platform.OS === 'ios' ? 1 : 0
           selectedValue={selectedTable}
           style={{ height: 50, width: 200 }}
           onValueChange={(itemValue, itemIndex) => {
@@ -654,7 +676,7 @@ const AdminScreen = ({ navigation }) => {
             label="One Time Expense Table"
             value="one_time_expense_table"
           />
-        </Picker>
+        </Picker> */}
       </View>
       {selectedTable && (
         <View>
