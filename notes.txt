@@ -1,34 +1,4 @@
-X rec algo is open source; done by musk, previously was not. No other main social media does this.
-https://github.com/twitter/the-algorithm
 
-Censoring conservatives 10 to 1 on X; high profiles accounts like Trump and Bongino banned.
-https://x.com/alx/status/1769851710124519754
-
-Hunter biden laptop
-https://www.foxnews.com/politics/doj-knew-hunter-biden-laptop-was-not-manipulated-contained-reliable-evidence-in-2019-whistleblower
-Whistleblower Gary Shapley Jr., who was the supervisor of the investigation at the IRS, said that "at every stage" of the Hunter Biden probe, decisions were made that "had the effect of benefiting the subject of the investigation."
-"The FBI verified its authenticity in November of 2019 by matching the device number against Hunter Biden's Apple iCloud ID," Shapely said. "When the FBI took possession of the device in December 2019, they notified the IRS that it likely contained evidence of tax crimes." "acknowledged that there was no reason to believe that any data was manipulated on devices by any third party." Then CIA then put together a coalition to claim it as Russian disinformation.
-
-71% of Democrats say this would have changed their vote, so definitely consequences
-https://www.congress.gov/118/meeting/house/116258/documents/HHRG-118-FD00-20230720-SD011.pdf
-
-Ivermectin wins the Nobel prize, saves millions of lives, is harmless to humans in prescribed doses
-https://www.nobelprize.org/prizes/medicine/2015/press-release/
-
-Ivermectin studies concludes effectiveness vs c19.  This is not to say its definitive, but science works by debate, not censorship
-https://www.sciencedirect.com/science/article/pii/S2052297521000883
-
-Sanya Gupta admits CNN lying about ivermectin; a great example 
-https://www.youtube.com/watch?v=DkTXEexNB2E
-
-Missouri v. Biden allegations.  Lower court agreed. Supreme Court overturned.  So they definitely did it, but are allowed.
-https://thefederalist.com/2023/07/07/12-times-the-biden-white-house-colluded-with-big-tech-to-throttle-free-speech-according-to-missouri-v-biden/
-
-Prop 47 was devised to reduce prison population. So I was definitely overreaching with my allegation that is was motivated by progressive ideas on racial justice
-https://en.wikipedia.org/wiki/2014_California_Proposition_47
-
-Ubi. Yes there are studies to say the contrary.
-https://fee.org/articles/the-largest-study-ever-on-ubi-was-just-conducted-the-results-are-disappointing-for-advocates/
 
 Object {
     "amount": 0,
