@@ -1,25 +1,16 @@
 import React, { useContext, useState } from "react";
 import Toast from "react-native-toast-message";
 import { defaultToastObj } from "../util/ui";
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Text,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  TouchableOpacity,
-} from "react-native";
-import Button from "../components/ui/Button";
+import { View, ScrollView } from "react-native";
 import GenericList from "../components/GenericList/GenericList";
 import { AppContext } from "../store/app-context";
 import IntervalList from "../components/IntervalList/IntervalList";
 import MiscSettings from "../components/MiscSettings/MiscSettings";
+import text from "../assets/language/text.json";
+import { getSettingScreenStyles } from "../styles/screenStyles";
 
 const SettingsScreen = ({ navigation }) => {
   const ctx = useContext(AppContext);
-
   const { dispatch, playSoundFile, state, translation, tables } = ctx;
   const {
     hourly_income_table,
@@ -32,30 +23,9 @@ const SettingsScreen = ({ navigation }) => {
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
   const { sound, theme, notifications, currency, id, language } = settings;
   const currentTheme = themes[theme] || themes["LIGHT"];
-  // console.log("currentTheme: ", themes);
-  const styles = StyleSheet.create({
-    scrollViewContent: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: currentTheme.background,
-      color: currentTheme.text,
-    },
-    headerTitle: {
-      color: currentTheme.text,
-      fontSize: 22,
-    },
-    settingRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    settingsRow: {
-      marginTop: 15,
-    },
-  });
+  const styles = getSettingScreenStyles(currentTheme);
   const [showingList, setShowingList] = useState("");
   const updateShowingList = (listName) => {
-    console.log("updateShowingList ", listName);
     setShowingList(listName || "");
   };
   const deleteCategoryAndDependencies = async (config) => {
@@ -65,7 +35,9 @@ const SettingsScreen = ({ navigation }) => {
       foreign_key,
       +item
     );
-    //console.log(`related_events with ${foreign_key} ${item.id} ${related_events.length}`);
+    console.log(
+      `related_events with ${foreign_key} ${item.id} ${related_events.length}`
+    );
     const deleted_events = await event_table.deleteAllRowsByField(
       foreign_key,
       +item
@@ -74,10 +46,12 @@ const SettingsScreen = ({ navigation }) => {
       foreign_key,
       +item
     );
-    //console.log(`after_delete_events with ${foreign_key} ${item.id} in db ${after_delete_events.length}`)
-
+    console.log(
+      `after_delete_events with ${foreign_key} ${item.id} in db ${after_delete_events.length}`
+    );
+    console.log(`delete_item from ${categories_key} with id ${item.id}`);
     const delete_item_result = await table.deleteRow(+item);
-    //console.log(`delete_item from ${categories_key} with id ${item.id}`)
+    
 
     console.log(
       `(state) before delete current ${categories_key}  ${category_items.length}`
@@ -99,10 +73,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollViewContent}
-      // Add additional props you need for the ScrollView
-    >
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <View style={styles.settingsRow}>
         {/* <HourlyIncomeList /> */}
         <GenericList
@@ -110,7 +81,7 @@ const SettingsScreen = ({ navigation }) => {
           updateShowingList={updateShowingList}
           itemKey={"hourlyIncomes"}
           currentTheme={currentTheme}
-          title={"Hourly Incomes"}
+          title={text[language]["Hourly incomes"]}
           items={hourlyIncomes}
           table={hourly_income_table}
           translation={translation}
@@ -121,10 +92,9 @@ const SettingsScreen = ({ navigation }) => {
           placeholderText={"hourly_wage"}
           text_key={"hourly_wage"}
           foreign_key="hourly_income_id"
-          modalText={
-            "Delete hourly income category?\n\nThis will delete all related events"
-          }
+          modalText={text[language]["delete_hourly_incomes_msg"]}
           onItemDelete={deleteCategoryAndDependencies}
+          styles={styles}
         />
       </View>
       <View style={styles.settingsRow}>
@@ -134,7 +104,7 @@ const SettingsScreen = ({ navigation }) => {
           updateShowingList={updateShowingList}
           itemKey={"oneTimeIncomes"}
           currentTheme={currentTheme}
-          title={"One Time Incomes"}
+          title={text[language]["One time incomes"]}
           items={oneTimeIncomes}
           table={one_time_income_table}
           translation={translation}
@@ -145,10 +115,9 @@ const SettingsScreen = ({ navigation }) => {
           placeholderText={"income"}
           text_key={"income"}
           foreign_key="one_time_income_id"
-          modalText={
-            "Delete one time income category?\n\nThis will delete all related events"
-          }
+          modalText={text[language]["delete_one_time_incomes_msg"]}
           onItemDelete={deleteCategoryAndDependencies}
+          styles={styles}
         />
       </View>
       <View style={styles.settingsRow}>
@@ -157,7 +126,7 @@ const SettingsScreen = ({ navigation }) => {
           updateShowingList={updateShowingList}
           itemKey={"oneTimeExpenses"}
           currentTheme={currentTheme}
-          title={"One Time Expenses"}
+          title={text[language]["One time expenses"]}
           items={oneTimeExpenses}
           table={one_time_expense_table}
           translation={translation}
@@ -168,10 +137,9 @@ const SettingsScreen = ({ navigation }) => {
           placeholderText={"expense"}
           text_key={"expense"}
           foreign_key="one_time_expense_id"
-          modalText={
-            "Delete one time expense category?\n\nThis will delete all related events"
-          }
+          modalText={text[language]["delete_one_time_expense_msg"]}
           onItemDelete={deleteCategoryAndDependencies}
+          styles={styles}
         />
       </View>
       <View style={styles.settingsRow}>
@@ -179,28 +147,33 @@ const SettingsScreen = ({ navigation }) => {
           showingList={showingList}
           updateShowingList={updateShowingList}
           foreign_key="interval_id"
-          title={"Shifts"}
-          modalText={"Delete interval?\n\nThis will delete all related events"}
+          title={text[language]["Shifts"]}
+          modalText={text[language]["delete_one_time_incomes_msg"]}
           onItemDelete={deleteCategoryAndDependencies}
+          styles={styles}
         />
       </View>
-      <MiscSettings
-        showingList={showingList}
-        updateShowingList={updateShowingList}
-        itemKey={"hourlyIncomes"}
-        currentTheme={currentTheme}
-        title={"Other settings"}
-        settings_table={settings_table}
-        language={language}
-        dispatch={dispatch}
-        sound={sound}
-        theme={theme}
-        notifications={notifications}
-        currency={currency}
-        styles={styles}
-        id={id}
-      />
-            <Toast
+      <View style={styles.settingsRow}>
+        <MiscSettings
+          showingList={showingList}
+          updateShowingList={updateShowingList}
+          itemKey={"hourlyIncomes"}
+          currentTheme={currentTheme}
+          title={text[language]["Other settings"]}
+          settings_table={settings_table}
+          language={language}
+          dispatch={dispatch}
+          sound={sound}
+          theme={theme}
+          notifications={notifications}
+          currency={currency}
+          styles={styles}
+          id={id}
+          translation={translation}
+        />
+      </View>
+
+      <Toast
         style={{
           elevation: 20, //Render the Toast component in your app's entry file, as the LAST CHILD in the View hierarchy
         }}

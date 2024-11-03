@@ -1,22 +1,15 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, SafeAreaView, Platform } from "react-native";
-import { AppContext } from "./store/app-context";
+import { StyleSheet, SafeAreaView, Platform } from "react-native";
 import Root from "./components/Root/Root";
 import AppContextProvider from "./store/app-context";
+import appStyles from "./styles/appStyles";
 
 const App = () => {
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      marginTop: 10,
-    },
-  });
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={appStyles.container}>
       <AppContextProvider>
-        <StatusBar style="dark" />
-          <Root/>  
+        <StatusBar />
+        <Root />
       </AppContextProvider>
     </SafeAreaView>
   );

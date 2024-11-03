@@ -7,6 +7,7 @@ import { Alert } from "react-native";
 import Button from "../components/ui/Button";
 import FinancialSummaryTable from "../components/FinancialSummary/FinancialSummary";
 import ButtonSwitch from "../components/ui/ButtonSwitch";
+import { getSummaryScreenStyles } from "../styles/screenStyles";
 
 const SummaryScreen = ({ navigation }) => {
   const [startYear, setStartYear] = useState(new Date().getFullYear());
@@ -34,19 +35,7 @@ const SummaryScreen = ({ navigation }) => {
 
   const currentTheme = themes[theme] || themes["LIGHT"];
   const activeColor = currentTheme.background;
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: currentTheme.background,
-      color: currentTheme.text,
-    },
-    buttonContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 20,
-    },
-  });
+  const styles = getSummaryScreenStyles(currentTheme)
 
   useEffect(() => {
     const performDBReinit = async () => {
@@ -247,7 +236,7 @@ const SummaryScreen = ({ navigation }) => {
  // console.log("feilter ", filteredEvents.length);
  console.log("activeColor ", activeColor)
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={styles.container}>
       {/* <Button
         onPress={() =>
           filterEvents(
@@ -270,6 +259,9 @@ const SummaryScreen = ({ navigation }) => {
         yearChangedHandler={startYearChangedHandler}
         monthChangedHandler={startMonthChangedHandler}
         includeDay={true}
+        translation={translation[language]}
+        language={language}
+        styles={styles}
       />
       <MonthYearPicker
         markedDates={markedDates}
@@ -279,6 +271,9 @@ const SummaryScreen = ({ navigation }) => {
         yearChangedHandler={endYearChangedHandler}
         monthChangedHandler={endMonthChangedHandler}
         includeDay={true}
+        translation={translation[language]}
+        language={language}
+        styles={styles}
       />
       <View>
         {/* <ButtonSwitch
@@ -306,7 +301,7 @@ const SummaryScreen = ({ navigation }) => {
             textStyle={{ color: currentTheme.text }}
             buttonStyle={{ borderWidth: 1, borderColor: "black" }}
           >
-            3 mo
+            {translation[language]["3 mo"]}
           </Button>
           <Button
             shape="pill"
@@ -315,7 +310,7 @@ const SummaryScreen = ({ navigation }) => {
             textStyle={{ color: currentTheme.text }}
             buttonStyle={{ borderWidth: 1, borderColor: "black" }}
           >
-            6 mo
+            {translation[language]["6 mo"]}
           </Button>
           <Button
             shape="pill"
@@ -324,7 +319,7 @@ const SummaryScreen = ({ navigation }) => {
             textStyle={{ color: currentTheme.text }}
             buttonStyle={{ borderWidth: 1, borderColor: "black" }}
           >
-            12 mo
+            {translation[language]["12 mo"]}
           </Button>
           <Button
             shape="pill"
@@ -333,7 +328,7 @@ const SummaryScreen = ({ navigation }) => {
             textStyle={{ color: currentTheme.text }}
             buttonStyle={{ borderWidth: 1, borderColor: "black" }}
           >
-            All
+            {translation[language]["All"]}
           </Button>
         
         </View>
@@ -347,6 +342,9 @@ const SummaryScreen = ({ navigation }) => {
           oneTimeIncomes={oneTimeIncomes}
           hourlyIncomes={hourlyIncomes}
           intervals={intervals}
+          translation={translation[language]}
+          language={language}
+          styles={styles}
         />
       )}
     </ScrollView>

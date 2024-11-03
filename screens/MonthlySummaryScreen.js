@@ -21,26 +21,12 @@ import MonthTable from "../components/MonthTable/MonthTable";
 import ExpenseIncomeSwitch from "../components/ExpenseIncomeSwitch/ExpenseIncomeSwitch";
 import ButtonSwitch from "../components/ui/ButtonSwitch";
 import { getFilteredMarkedDates } from "../util/budgeter_util";
+import { getMonthlySummaryScreenStyles } from "../styles/screenStyles";
 const MonthlySummaryScreen = () => {
   const [selectedType, setSelectedType] = useState("income");
-  const [markedDates, setMarkedDates] = useState({});
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const buttons = [
-    {
-      title: "Expense",
-      onPress: () => {
-        setSelectedType("expense");
-        // additional actions
-      },
-    },
-    {
-      title: "Income",
-      onPress: () => {
-        setSelectedType("income");
-        // additional actions
-      },
-    },
-  ];
+  const [markedDates, setMarkedDates] = useState({});
+
   // Retrieving hourlyIncomes and intervals from context
   const ctx = useContext(AppContext);
   const { intervals, events, categories, themes, settings } = ctx.state;
@@ -48,22 +34,19 @@ const MonthlySummaryScreen = () => {
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
   const { sound, theme, notifications, currency, id, language } = settings;
   const currentTheme = themes[theme] || themes["LIGHT"];
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: currentTheme.background,
-      color: currentTheme.text,
+  const styles = getMonthlySummaryScreenStyles(currentTheme)
+  console.log("mss " ,styles);
+  const buttons = [
+    {
+      title: translation[language]["expense"],
+      onPress: () => setSelectedType("expense"),
     },
-  });
+    {
+      title: translation[language]["income"],
+      onPress: () => setSelectedType("income"),
+    },
+  ];
   useEffect(() => {
-    const performDBReinit = async () => {
-      const reinit = await event_table.reinitializeDb();
-      console.log("event db reinit ", reinit);
-    };
-    const fetchEventSchema = async () => {
-      const schema = await event_table.getSchema();
-      console.log("shcmea", schema);
-    };
     if (events)
       setMarkedDates(
         convertToCalendarEvents({
@@ -71,14 +54,7 @@ const MonthlySummaryScreen = () => {
           categories: categories,
         })
       );
-    //performDBReinit()
-    //fetchEventSchema()
   }, [events]);
-  //console.log("COS events ", events);
-  // console.log("CIS intervals ", intervals)
-  // const chosenTypes = hourlyIncomes.filter(
-  //   (c) => c.type === selectedType
-  // );
 
 
   return (
@@ -94,6 +70,8 @@ const MonthlySummaryScreen = () => {
       <MonthSummary
         markedDates={getFilteredMarkedDates(markedDates, selectedType)}
         selectedType={selectedType}
+        translation={translation[language]}
+        styles={styles}
       />
     </ScrollView>
   );

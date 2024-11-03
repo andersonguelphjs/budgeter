@@ -3,7 +3,7 @@ import { getProperty, getTypeArrayKey } from './budgeter_util';
 export const getHourMinutes = (date) => {
   // Format the date to get hours and minutes
   //return date
-  console.log("getHourMinutes ", date);
+  //console.log("getHourMinutes ", date);
   const hourMinutes = format(date, 'HH:mm');
   return hourMinutes;
 }
@@ -13,7 +13,7 @@ export const convertToCalendarEvents = (config) => {
     
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses} = categories;
   const calendarEvents = {};
-  console.log("converting calendar events ", events)
+  //console.log("converting calendar events ", events)
   events.forEach((event, index) => {
 
     const {event_type_key, amount, hourly_income_id, one_time_expense_id, one_time_income_id, interval_id, date, timestamp, note, type, id} = event;
@@ -73,6 +73,12 @@ export const getDateWithOffset =(fromDate, monthOffset = -1, dayOffset = 0) =>{
   }
 
   return newDate;
+}
+
+export const removeSecondsFromISOString = (isoString)=> {
+  const date = new Date(isoString);
+  date.setSeconds(0, 0); // Set seconds and milliseconds to 0
+  return date.toISOString();
 }
 
 

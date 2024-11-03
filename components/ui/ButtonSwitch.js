@@ -41,7 +41,7 @@ props eg
       onPress={handlePress}
       selectMultiple={multiple}
       selectedIndexes={multiple ? selectedIndices : [selectedIndices].filter((i) => i !== null)}
-      containerStyle={{ marginBottom: 20 }}
+      containerStyle={{ marginBottom: 20, borderRadius: 3 }}
       selectedButtonStyle={{ backgroundColor: currentTheme?.button || 'blue', borderWidth: 1, borderColor: 'black' }}
       buttonStyle={{borderWidth: 1, borderColor: 'black'}}
       innerBorderStyle={{ width: 0 }}

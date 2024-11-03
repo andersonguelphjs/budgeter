@@ -111,7 +111,10 @@ export const themes = {
     inverse_text: colors.shufu_light_text,
     button: colors.shufu_blue,
     header: colors.shufu_light_pink,
-    icon: "#f6eef3"
+    icon: "#f6eef3",
+    bottom_nav_background: colors.white,
+    bottom_nav_icon: colors.tomato,
+    bottom_nav_icon_inactive: colors.grey
   },
   DARK: {
     name: "dark",
@@ -123,6 +126,9 @@ export const themes = {
     inverse_text: colors.shufu_dark_text, // Light pinkish color for text which is the grey from your light theme
     button: colors.shufu_light_pink, // Buttons could stand out with a lighter color
     header: colors.shufu_brown, // Headers could have a distinctive color
-    icon: "#fbd4e1"
+    icon: "#fbd4e1",
+    bottom_nav_background: colors.black,
+    bottom_nav_icon: colors.black,
+    bottom_nav_icon_inactive: colors.grey
   },
 };

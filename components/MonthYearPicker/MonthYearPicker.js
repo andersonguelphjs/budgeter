@@ -15,6 +15,9 @@ const MonthYearPicker = ({
   monthChangedHandler,
   yearChangedHandler,
   includeDay = false,
+  language,
+  translation,
+  styles
 }) => {
   const customStyles = useCustomStyles();
   const years = Object.keys(markedDates || {})
@@ -62,14 +65,14 @@ const MonthYearPicker = ({
       setCurrentDate(newDate);
     }, [selectedDay, selectedMonth, selectedYear, selectedDay, includeDay]);
   return (
-    <View style={styles.pickerContainer}>
+    <View>
       {/* Month Picker */}
       <View style={styles.monthContainer}>
         <TouchableOpacity onPress={() => changeMonth(-1)}>
           <Ionicons name="arrow-back" size={30} color="black" />
         </TouchableOpacity>
         <Text style={styles.monthText}>
-          {currentDate.toLocaleDateString("default", dateFormat)}
+          {currentDate.toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US', dateFormat)}
         </Text>
         <TouchableOpacity onPress={() => changeMonth(1)}>
           <Ionicons name="arrow-forward" size={30} color="black" />
@@ -79,20 +82,5 @@ const MonthYearPicker = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  monthContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    // Add additional styling to match your theme
-  },
-  monthText: {
-    fontSize: 20,
-    // Add additional styling as needed
-  },
-});
 
 export default MonthYearPicker;

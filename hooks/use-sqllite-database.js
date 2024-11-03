@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import * as SQLite from "expo-sqlite";
+import * as SQLite from "expo-sqlite/legacy";
 
 const useSQLLiteDatabase = ({ table, db_name, desiredSchema = [] }) => {
+  
   const db = SQLite.openDatabase(`${db_name}_database.db`);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ const useSQLLiteDatabase = ({ table, db_name, desiredSchema = [] }) => {
   };
 
   const getFirstRow = async () => {
+    console.log(`Fetch first row from ${table}`);
     try {
       const result = await new Promise((resolve, reject) => {
         db.transaction((tx) => {
@@ -176,6 +178,7 @@ const useSQLLiteDatabase = ({ table, db_name, desiredSchema = [] }) => {
       throw error;
     }
   };
+
   const getAllRowsByField = async (key, value) => {
     console.log(`Fetch all rows from ${table} where ${key} = ${value}`);
     try {
@@ -392,7 +395,6 @@ const useSQLLiteDatabase = ({ table, db_name, desiredSchema = [] }) => {
     }
   };
   
-
   const deleteAllRows = async () => {
     console.log(`Attempting to delete all rows from ${table}.`);
     try {

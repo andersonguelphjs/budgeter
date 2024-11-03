@@ -10,6 +10,8 @@ export const EventSchema = [
     { name: "interval_id", type: "INTEGER" },
     { name: "one_time_income_id", type: "INTEGER" },
     { name: "one_time_expense_id", type: "INTEGER" },
+    { name: "startTime", type: "TEXT" }, 
+    { name: "endTime", type: "TEXT" },  
   ];
   
   export default class Event {

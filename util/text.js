@@ -52,7 +52,7 @@ function getLuminanceFromRGB(color) {
   
   // This function determines if a color (in HEX) is "light" or "dark" by calculating the luminance.
   function isLightColor(hexColor) {
-    console.log("isLightColor ", hexColor)
+    //console.log("isLightColor ", hexColor)
     
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;

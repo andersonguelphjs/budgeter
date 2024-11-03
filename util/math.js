@@ -2,7 +2,7 @@ export const calculateTotal = (startTime, endTime, hourlyRate) => {
   // Parse the start and end times
   const start = new Date(startTime);
   const end = new Date(endTime);
-
+  console.log("calculateTotal", start, end, hourlyRate);
   // Check if start time is after end time
   if (start > end) {
     return 0;

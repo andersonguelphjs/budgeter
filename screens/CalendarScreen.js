@@ -10,17 +10,22 @@ import {
   TextInput,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Calendar } from "react-native-calendars";
+import { Calendar, LocaleConfig } from "react-native-calendars";
 import { AppContext } from "../store/app-context";
 import { getHourMinutes } from "../util/dates";
 import { Ionicons } from "@expo/vector-icons";
 import { dynamicStyle } from "../util/text";
-import { convertToCalendarEvents } from "../util/dates";
+import { convertToCalendarEvents, removeSecondsFromISOString } from "../util/dates";
 import ExpenseIncomeSwitch from "../components/ExpenseIncomeSwitch/ExpenseIncomeSwitch";
 import EventsForSelectedDay from "../components/EventsForSelectedDay/EventsForSelectedDay";
 import EventAdd from "../components/EventAdd/EventAdd";
 import ButtonSwitch from "../components/ui/ButtonSwitch";
 import { getFilteredMarkedDates } from "../util/budgeter_util";
+import text from "../assets/language/text.json";
+import { getCalendarScreenStyles } from "../styles/screenStyles";
+import ConfirmationModal from "../components/ui/ConfirmationModal";
+import CalendarComponent from "../components/CalendarComponent/CalendarComponent";
+
 const CalendarScreen = () => {
   const [selectedType, setSelectedType] = useState("income");
   const [selectedDay, setSelectedDay] = useState({});
@@ -33,26 +38,13 @@ const CalendarScreen = () => {
   const [amount, setAmount] = useState(0);
   const [note, setNote] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(1);
-  const buttons = [
-    {
-      title: "Expense",
-      onPress: () => {
-        setSelectedType("expense");
-        // additional actions
-      },
-    },
-    {
-      title: "Income",
-      onPress: () => {
-        setSelectedType("income");
-        // additional actions
-      },
-    },
-  ];
+  const [modalVisible, setModalVisible] = useState(false);
+  const [deleteConfig, setDeleteConfig] = useState({});
+  const [eventAddedMsg, setEventAddedMsg] = useState("");
 
   // Retrieving HourlyIncomes and intervals from context
   const ctx = useContext(AppContext);
-  const { dispatch, playSoundFile, state, translation, tables } = ctx;
+  const { dispatch, playSoundFile, state, tables } = ctx;
   const { intervals, events, categories, themes, settings } = ctx.state;
   const { hourlyIncomes, oneTimeIncomes, oneTimeExpenses } = categories;
   const { sound, theme, notifications, currency, id, language } = settings;
@@ -64,171 +56,59 @@ const CalendarScreen = () => {
     one_time_expense_table,
     event_table,
   } = tables;
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: currentTheme.background,
-      color: currentTheme.text,
-    },
-    textCentered: {
-      textAlign: "center",
-      backgroundColor: currentTheme.button,
-      padding: 10,
-      borderWidth: 1,
-      borderColor: 'black',
-    },
-    hidden: {
-      display: "none",
-    },
-    horizontalLayout: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-start",
-      marginVertical: 10,
-    },
-    label: {
-      marginHorizontal: 8,
-    },
-    input: {
-      flex: 1,
-      height: 40,
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 5,
-      padding: 10,
-    },
-    switchContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      marginVertical: 10,
-    },
-    itemContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: "#cccccc",
-    },
-    eventListContainer: {
-      padding: 10,
-    },
-    eventItem: {
-      flexDirection: "row",
-      padding: 5,
-      borderRadius: 5,
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    addEventContainer: {
-      backgroundColor: 'white',
-      margin: 10,
-      padding: 15,
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 5,
-      borderWidth: 1,
-      borderColor: 'black',
-    },
-    addButton: {
-      backgroundColor: "#4CAF50",
-      padding: 10,
-      opacity: 1,
-      borderWidth: 1,
-      borderColor: 'black',
-      borderRadius: 5,
-      alignItems: 'center',
-      margin: 10,
-    },
-    addButtonText: {
-      color: "#fff",
-      textAlign: "center",
-      fontSize: 16,
-    },
-    disabledButton: {
-      backgroundColor: "grey",
-      padding: 10,
-      borderWidth: 1,
-      borderColor: 'black',
-      borderRadius: 5,
-      alignItems: 'center',
-      margin: 10,
-    },
-    disabledButtonText: {
-      textAlign: "center",
-      color: "darkgrey",
-      fontSize: 16,
-    },
-    multilineInput: {
-      height: 100,
-    },
-    chooseADayText: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: currentTheme.text || 'black',
-      backgroundColor: currentTheme.background || 'white',
-      textAlign: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 15,
-      borderTopLeftRadius: 8,
-      borderTopRightRadius: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ddd',
-      marginBottom: 5
-    },
-    addEventText: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: currentTheme.text || 'black',
-      backgroundColor: currentTheme.background || 'white',
-      textAlign: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 15,
-      borderTopLeftRadius: 8,
-      borderTopRightRadius: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ddd',
-      marginBottom: 5
-    },
-  
-  });
-  
 
+  const styles = getCalendarScreenStyles(currentTheme);
+  const translation = text[language];
+  const buttons = [
+    {
+      title: translation["expense"],
+      onPress: () => {
+        setSelectedType("expense");
+        setHourlyIncome(null);
+        setOneTimeIncome(null);
+        setOneTimeExpense(null);
+        setAmount(0);
+        setNote("");
+      },
+    },
+    {
+      title: translation["income"],
+      onPress: () => {
+        setSelectedType("income");
+        setHourlyIncome(null);
+        setOneTimeIncome(null);
+        setOneTimeExpense(null);
+        setAmount(0);
+        setNote("");
+      },
+    },
+  ];
   useEffect(() => {
-    const performDBReinit = async () => {
-      const reinit = await event_table.reinitializeDb();
-      console.log("event db reinit ", reinit);
-    };
-    const fetchEventSchema = async () => {
-      const schema = await event_table.getSchema();
-      console.log("shcmea", schema);
-    };
     const newMarkedDates = convertToCalendarEvents({
       events: events,
       categories: categories,
     });
-    //console.log("newMarkedDates ", Object.keys(newMarkedDates).length)
+
     if (events) setMarkedDates(newMarkedDates);
-    //performDBReinit()
-    //fetchEventSchema()
   }, [events]);
+
+  useEffect(() => {
+
+    if (eventAddedMsg) setTimeout(() => {setEventAddedMsg("")},5000)
+
+  },[eventAddedMsg]);
 
   const chosenTypes =
     selectedType === "expenses"
       ? oneTimeExpenses
       : hourlyIncomes.concat(oneTimeIncomes);
 
-  const deleteEvent = async (config) => {
-    console.log("deleteEvent ", config);
+  const confirmDeleteEvent = async () => {
     // const newItems = intervals.filter((_, i) => i !== index);
     // const result = await deleteIntervalRow(intervals[index].id);
     // console.log("interval delete result ",result)
-    const { dateString } = config?.day;
-    const { key, id } = config;
+    const { dateString } = deleteConfig?.day;
+    const { key, id } = deleteConfig;
     console.log("dateString ", dateString, key, id);
     const result = await event_table.deleteRow(id);
     console.log("result ", result);
@@ -239,7 +119,23 @@ const CalendarScreen = () => {
     const newEvents = events.filter((i) => i.id !== id);
     console.log("newEvents", newEvents.length);
     dispatch({ type: "UPDATE_EVENTS", events: newEvents });
+    setDeleteConfig({});
+    setModalVisible(false);
   };
+
+  const deleteEvent = (config) => {
+    console.log("deleteEvent ", config);
+    setDeleteConfig(config);
+    setModalVisible(true);
+    setEventAddedMsg(translation["event_deleted"])
+  };
+  const startTimeInitValue =
+  (selectedType === "income" && incomeType === "hourly" && interval && removeSecondsFromISOString(intervals.find(i => i.id === interval).startTime)) ||
+  null;
+  const endTimeInitValue =
+  (selectedType === "income" && incomeType === "hourly" && interval && removeSecondsFromISOString(intervals.find(i => i.id === interval).endTime)) ||
+  null;
+ console.log("hourlyINcom ", hourlyIncome, interval, startTimeInitValue, endTimeInitValue)
 
   const addEvent = async () => {
     const { dateString, day, month, timestamp, year } = selectedDay;
@@ -254,6 +150,9 @@ const CalendarScreen = () => {
     const _interval_id =
       (selectedType === "income" && incomeType === "hourly" && interval) ||
       null;
+    const startTime = _interval_id && intervals.find(i => i.id === _interval_id).startTime && new Date(_interval_id && intervals.find(i => i.id === _interval_id).startTime).toISOString() || null;
+    const endTime = _interval_id && intervals.find(i => i.id === _interval_id).endTime && new Date(_interval_id && intervals.find(i => i.id === _interval_id).endTime).toISOString() || null;
+    console.log("startTime: ", typeof startTime)
     const _one_time_expense_id =
       (selectedType === "expense" && oneTimeExpense) || null;
     const _amount =
@@ -267,7 +166,7 @@ const CalendarScreen = () => {
       (incomeType === "hourly" && "hourly_income_id") ||
       "one_time_income_id";
 
-    const itemToAdd = {
+    const eventToAdd = {
       hourly_income_id: _hourly_income_id,
       one_time_income_id: _one_time_income_id,
       one_time_expense_id: _one_time_expense_id,
@@ -278,18 +177,21 @@ const CalendarScreen = () => {
       event_type_key: _event_type_key,
       timestamp: timestamp,
       date: dateString,
+      startTime : startTime,
+      endTime : endTime,
     };
 
-    const result = await event_table.createNewRow(itemToAdd);
+    const result = await event_table.createNewRow(eventToAdd);
 
-    itemToAdd.id = result;
+    eventToAdd.id = result;
     const count = await event_table.getRowCount();
     playSoundFile(null, 2);
-    const newEvents = [...events, itemToAdd];
+    const newEvents = [...events, eventToAdd];
     dispatch({
       type: "UPDATE_EVENTS",
       events: newEvents,
     });
+    setEventAddedMsg(translation["event_added"]);
     // Reset the input fields after adding the event
     clearDateData();
   };
@@ -336,6 +238,7 @@ const CalendarScreen = () => {
     setAmount(0);
     setNote("");
   };
+
   const clearSelections = () => {
     console.log("clearSelections");
 
@@ -350,47 +253,13 @@ const CalendarScreen = () => {
     clearDateData();
     setSelectedDay({});
   };
-  
-  const isDarkMode = theme === "DARK";
-  const calendarTheme = {
-    backgroundColor: isDarkMode ? "#000" : "#fff",
-    calendarBackground: isDarkMode ? "#1c1c1e" : "#fff",
-    textSectionTitleColor: isDarkMode ? "#b6c1cd" : "#b6c1cd",
-    textSectionTitleDisabledColor: isDarkMode ? "#d9e1e8" : "#d9e1e8",
-    selectedDayBackgroundColor: isDarkMode ? "#00adf5" : "#00adf5",
-    selectedDayTextColor: isDarkMode ? "#ffffff" : "#ffffff",
-    todayTextColor: isDarkMode ? "#00adf5" : "#00adf5",
-    dayTextColor: isDarkMode ? "#d9e1e8" : "#2d4150",
-    textDisabledColor: isDarkMode ? "#525c69" : "#d9e1e8",
-    dotColor: isDarkMode ? "#00adf5" : "#00adf5",
-    selectedDotColor: isDarkMode ? "#ffffff" : "#ffffff",
-    arrowColor: isDarkMode ? "orange" : "blue",
-    disabledArrowColor: isDarkMode ? "#d9e1e8" : "#d9e1e8",
-    monthTextColor: isDarkMode ? "#b6c1cd" : "#b6c1cd",
-    indicatorColor: isDarkMode ? "blue" : "red",
-    borderWidth: 1,
-    borderColor: 'black',
-    'stylesheet.day.multiDot': {
-      dot: {
-        width: 10,
-        height: 10,
-        marginTop: 1,
-        marginHorizontal: 1,
-        borderRadius: 5,
-      },
-      // If you have multiple dots and want to adjust the space between them, you can use this:
-      dotContainer: {
-        marginHorizontal: 2,
-      },
-    },
-    // ... other styling properties
-  }
+
   const filteredMarkedDates = getFilteredMarkedDates(markedDates, selectedType);
   console.log("selectedType", selectedType, incomeType, oneTimeExpense, amount);
   const incomeDisabled =
     selectedType === "income" &&
     ((incomeType === "hourly" && (!hourlyIncome || !interval)) ||
-      (incomeType === "one_time" && (!oneTimeExpense || !amount)));
+      (incomeType === "one_time" && (!oneTimeIncome || !amount)));
 
   //console.log("incomeDisabled", incomeDisabled, selectedIndex, hourlyIncome, interval, incomeType);
   const addButtonDisabled =
@@ -399,8 +268,53 @@ const CalendarScreen = () => {
     (selectedType === "income" && incomeDisabled) ||
     (selectedType === "expense" && (!oneTimeExpense || !amount));
   //console.log("addButtonsDisabled", addButtonDisabled)
-  
+  const selectedDayEvents = selectedDay &&
+    filteredMarkedDates[selectedDay.dateString]?.dots && (
+      <EventsForSelectedDay
+        currentTheme={currentTheme}
+        selectedDay={selectedDay}
+        dayEvents={filteredMarkedDates[selectedDay.dateString]?.dots}
+        categories={categories}
+        intervals={intervals}
+        deleteEvent={deleteEvent}
+        getHourMinutes={getHourMinutes}
+        styles={styles}
+        event_table={event_table}
+        dispatch={dispatch}
+        translation={translation}
+      />
+    );
 
+  const addEventCard = Object.keys(selectedDay).length > 0 && (
+    <EventAdd
+      currentTheme={currentTheme}
+      styles={styles}
+      chosenTypes={chosenTypes}
+      hourlyIncome={hourlyIncome}
+      oneTimeIncome={oneTimeIncome}
+      setOneTimeIncome={setOneTimeIncome}
+      oneTimeExpense={oneTimeExpense}
+      setOneTimeExpense={setOneTimeExpense}
+      categories={categories}
+      setHourlyIncome={setHourlyIncome}
+      selectedType={selectedType}
+      incomeType={incomeType}
+      setIncomeType={setIncomeType}
+      intervals={intervals}
+      interval={interval}
+      setInterval={setInterval}
+      getHourMinutes={getHourMinutes}
+      amount={amount}
+      setAmount={setAmount}
+      note={note}
+      setNote={setNote}
+      addEvent={addEvent}
+      addButtonDisabled={addButtonDisabled}
+      selectedDay={selectedDay}
+      translation={translation}
+      eventAddedMsg={eventAddedMsg}
+    />
+  );
   return (
     <ScrollView style={styles.container}>
       <ButtonSwitch
@@ -410,58 +324,26 @@ const CalendarScreen = () => {
         selectedIndices={selectedIndex}
         setSelectedIndices={setSelectedIndex}
       />
-      <Calendar
+      <CalendarComponent
+        darkMode={theme === "DARK"}
+        currentLocale={language}
         markedDates={filteredMarkedDates}
         markingType={"multi-dot"}
         onDayPress={handleDayPress}
         onMonthChange={clearSelections}
-        theme={calendarTheme}
       />
-      {selectedDay && filteredMarkedDates[selectedDay.dateString]?.dots && (
-        <EventsForSelectedDay
-          currentTheme={currentTheme}
-          selectedDay={selectedDay}
-          dayEvents={filteredMarkedDates[selectedDay.dateString]?.dots}
-          categories={categories}
-          intervals={intervals}
-          deleteEvent={deleteEvent}
-          getHourMinutes={getHourMinutes}
-          styles={styles} // if `styles` is not global, you should pass it through
-        />
-      )}
-      {Object.keys(selectedDay).length > 0 && (
-        <EventAdd
-          currentTheme={currentTheme}
-          styles={styles}
-          chosenTypes={chosenTypes}
-          hourlyIncome={hourlyIncome}
-          oneTimeIncome={oneTimeIncome}
-          setOneTimeIncome={setOneTimeIncome}
-          oneTimeExpense={oneTimeExpense}
-          setOneTimeExpense={setOneTimeExpense}
-          categories={categories}
-          setHourlyIncome={setHourlyIncome}
-          selectedType={selectedType}
-          incomeType={incomeType}
-          setIncomeType={setIncomeType}
-          intervals={intervals}
-          interval={interval}
-          setInterval={setInterval}
-          getHourMinutes={getHourMinutes}
-          amount={amount}
-          setAmount={setAmount}
-          note={note}
-          setNote={setNote}
-          addEvent={addEvent}
-          addButtonDisabled={addButtonDisabled}
-          selectedDay={selectedDay}
-
-        />
-      )}
+      {selectedDayEvents}
+      {addEventCard}
+      <ConfirmationModal
+        modalVisible={modalVisible}
+        onConfirm={confirmDeleteEvent}
+        onCancel={() => setModalVisible(false)}
+        confirmText={translation["confirm"]}
+        cancelText={translation["cancel"]}
+        message={translation["delete_event"]}
+      />
     </ScrollView>
   );
 };
-
-
 
 export default CalendarScreen;

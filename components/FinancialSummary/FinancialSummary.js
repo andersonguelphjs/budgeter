@@ -5,47 +5,12 @@ import { getTypeArrayKey } from "../../util/budgeter_util";
 import { useCustomStyles } from "../../hooks/use-custom-style";
 
 const FinancialSummaryTable = (props) => {
-  const { events, hourlyIncomes, oneTimeExpenses, oneTimeIncomes, intervals, currentTheme= {} } =
+  const { events, hourlyIncomes, oneTimeExpenses, oneTimeIncomes, intervals, currentTheme= {}, translation, language, styles } =
     props;
   // Aggregate data by month/year.
   const customStyles = useCustomStyles();
   const aggregatedData = {};
-  const styles = StyleSheet.create({
-    table: {
-      borderBottomWidth: 1,
-      borderTopWidth: 1,
-      borderColor: "black"
-    },
-    tableRow: {
-      flexDirection: "row",
-      borderBottomWidth: 1,
-      borderColor: "#ddd",
-      padding: 10,
-      backgroundColor : currentTheme.background
-    },
-    tableHeaderRow: {
-      flexDirection: "row",
-      borderBottomWidth: 1,
-      borderColor: "black",
-      padding: 10,
-      backgroundColor : currentTheme.accent
-    },
-    tableHeader: {
-      fontWeight: "bold",
-      flex: 1, // this will divide the row space equally between the columns
-      textAlign: "center",
-    },
-    tableCell: {
-      flex: 1, // this will divide the row space equally between the columns
-      textAlign: "center",
-    },
-    positiveTotal: {
-      color: "green",
-    },
-    negativeTotal: {
-      color: "red",
-    },
-  });
+  
   events.forEach((event) => {
     //e.log("evemt", event);
     const { event_type_key, date, interval_id, type, amount } = event;
@@ -104,7 +69,7 @@ const FinancialSummaryTable = (props) => {
 
   // Add the total row at the beginning.
   rows.unshift({
-    monthYear: "Total",
+    monthYear: translation["Total"],
     income: totalIncome,
     expense: totalExpense,
     total: totalIncome - totalExpense,
@@ -119,10 +84,10 @@ const FinancialSummaryTable = (props) => {
     <View style={styles.table}>
       {/* Table header */}
       <View style={styles.tableHeaderRow}>
-        <Text style={styles.tableHeader}>Month/Year</Text>
-        <Text style={styles.tableHeader}>Income</Text>
-        <Text style={styles.tableHeader}>Expense</Text>
-        <Text style={styles.tableHeader}>Total</Text>
+        <Text style={styles.tableHeader}>{translation["Month/Year"]}</Text>
+        <Text style={styles.tableHeader}>{translation["Income"]}</Text>
+        <Text style={styles.tableHeader}>{translation["Expense"]}</Text>
+        <Text style={styles.tableHeader}>{translation["Total"]}</Text>
       </View>
 
       {/* Table rows */}

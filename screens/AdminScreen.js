@@ -1,10 +1,8 @@
 import React, { useContext, useState } from "react";
-import { Platform } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
-import { View, ScrollView, StyleSheet, Text, Modal, Alert } from "react-native";
+import RNPickerSelect from "react-native-picker-select";
+import { View, ScrollView, StyleSheet } from "react-native";
 import Button from "../components/ui/Button";
 import { AppContext } from "../store/app-context";
-import { Picker } from "@react-native-picker/picker";
 import JSONTree from "react-native-json-tree";
 import default_HourlyIncomes from "../assets/preload/HourlyIncomesDefault.json";
 import default_OneTimeExpenses from "../assets/preload/OneTimeExpensesDefault.json";
@@ -12,7 +10,8 @@ import default_OneTimeIncomes from "../assets/preload/OneTimeIncomesDefault.json
 import Toast from "react-native-toast-message";
 import { getRandomColorVariation, randomRoundedBetween } from "../util/random";
 import ConfirmationModal from "../components/ui/ConfirmationModal";
-
+import { getAdminScreenStyles } from "../styles/screenStyles";
+import { removeSecondsFromISOString } from "../util/dates";
 const AdminScreen = ({ navigation }) => {
   const defaultModalMessage = "Are you sure you want to perform this action?";
   const defaultToastObj = {
@@ -28,7 +27,7 @@ const AdminScreen = ({ navigation }) => {
     onPress: () => console.log("Toast pressed"),
   };
   const [selectedTable, setSelectedTable] = useState(null);
-  const defaultMsg = "make a query"
+  const defaultMsg = "make a query";
   const [data, setData] = useState(defaultMsg);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalFunction, setModalFunction] = useState(() =>
@@ -86,7 +85,9 @@ const AdminScreen = ({ navigation }) => {
       ];
       const selectedTypeKey =
         eventTypes[getRandomInt(0, eventTypes.length - 1)];
-
+      const intervaId = selectedTypeKey === "hourly_income_id" ? getRandomIdFromArray(intervals) : null;
+      const startTimeInitValue = intervaId && removeSecondsFromISOString(intervals.find(i => i.id === intervaId).startTime) || "";
+      const endTimeInitValue = intervaId && removeSecondsFromISOString(intervals.find(i => i.id === intervaId).endTime) || "";
       const itemToAdd = {
         date,
         timestamp,
@@ -101,10 +102,7 @@ const AdminScreen = ({ navigation }) => {
           selectedTypeKey === "hourly_income_id"
             ? getRandomIdFromArray(hourlyIncomes)
             : null,
-        interval_id:
-          selectedTypeKey === "hourly_income_id"
-            ? getRandomIdFromArray(intervals)
-            : null,
+        interval_id: intervaId,
         one_time_income_id:
           selectedTypeKey === "one_time_income_id"
             ? getRandomIdFromArray(oneTimeIncomes)
@@ -113,6 +111,8 @@ const AdminScreen = ({ navigation }) => {
           selectedTypeKey === "one_time_expense_id"
             ? getRandomIdFromArray(oneTimeExpenses)
             : null,
+        startTime : startTimeInitValue,
+        endTime : endTimeInitValue,
       };
 
       // You can replace this console.log with your createNewRow function call
@@ -134,142 +134,7 @@ const AdminScreen = ({ navigation }) => {
     console.log(`table ${tableName} all rows `, result);
     setData(result);
   };
-  // const stageGenerateEvents = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await generateDummyEvents(50);
-  //     const newEvents = await event_table.getAllRows();
-  //     console.log("newEvents ", newEvents.length);
-  //     dispatch({ type: "UPDATE_EVENTS", events: newEvents });
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: "Events table",
-  //         text2: `50 events generated `,
-  //       },
-  //     });
-  //     setData(newEvents);
-  //   });
-  //   setModalText(`Create 50 random events? `);
-  //   setModalVisible(true);
-  // };
-  // const stageTableInit = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await performTableReInit(table_map[selectedTable]);
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: selectedTable,
-  //         text2: `Reinitialized `,
-  //       },
-  //     });
-  //   });
-  //   setModalText(`Reinitialize ${selectedTable}? `);
-  //   setModalVisible(true);
-  // };
-  // const stageTableDrop = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await performTableDrop(table_map[selectedTable]);
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: selectedTable,
-  //         text2: `Dropped! `,
-  //       },
-  //     });
-  //   });
-  //   setModalText(`Drop (delete permanently) ${selectedTable}? `);
-  //   setModalVisible(true);
-  // };
-  // const stageDeleteAllRows = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await deleteAllRows(table_map[selectedTable], selectedTable);
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: selectedTable,
-  //         text2: `All rows deleted `,
-  //       },
-  //     });
-  //     const newRows = await getAllRows(table_map[selectedTable], selectedTable);
-  //     setData(newRows || []);
-  //   });
-  //   setModalText(`Delete all rows from ${selectedTable}? `);
-  //   setModalVisible(true);
-  // };
-  // const stageCreateRandomIntervals = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await createRandomIntervals();
-  //     const newIntervals = await interval_table.getAllRows();
-  //     console.log("newIntervals ", newIntervals.length);
-  //     dispatch({ type: "UPDATE_INTERVALS", intervals: newIntervals });
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: "RandomIntervals",
-  //         text2: "5 RandomIntervals creation complete ..",
-  //       },
-  //     });
-  //   });
-  //   setModalText(`Create 5 RandomIntervals? `);
-  //   setModalVisible(true);
-  // };
-  // const stagePreloadHourlyIncomes = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await preloadHourlyIncomes();
-  //     const newHourlyIncomes = await hourly_income_table.getAllRows();
-  //     console.log("newHourlyIncomes ", newHourlyIncomes.length);
-  //     dispatch({
-  //       type: "UPDATE_ITEMS",
-  //       items: newHourlyIncomes,
-  //       key: "hourlyIncomes",
-  //     });
 
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: "Hourly incomes",
-  //         text2: "Hourly incomes preloading complete ..",
-  //       },
-  //     });
-  //     setData(newHourlyIncomes);
-  //   });
-  //   setModalText(`Preload data for Hourly incomes? `);
-  //   setModalVisible(true);
-  // };
-  // const stagePreloadOneTimeIncomes = () => {
-  //   setModalFunction(() => async () => {
-  //     const res = await preloadOneTimeIncomes();
-  //     const newOneTimeIncomes = await one_time_income_table.getAllRows();
-  //     console.log("newOneTimeIncomes ", newOneTimeIncomes.length);
-  //     dispatch({
-  //       type: "UPDATE_ITEMS",
-  //       items: newOneTimeIncomes,
-  //       key: "oneTimeIncomes",
-  //     });
-  //     setModalVisible(false);
-  //     Toast.show({
-  //       ...defaultToastObj,
-  //       ...{
-  //         text1: "OneTimeIncomes",
-  //         text2: "OneTimeIncomes preloading complete ..",
-  //       },
-  //     });
-  //     setData(newOneTimeIncomes);
-  //   });
-  //   setModalText(`Preload data for OneTimeIncomes? `);
-  //   setModalVisible(true);
-  // };
-  // const stagePreloadOneTimeExpenses = () => {
-  //   setModalFunction();
-  //   setModalText(`Preload data forOneTime Expenses? `);
-  //   setModalVisible(true);
-  // };
   const executeCreateRandomEvents = () => async () => {
     const res = await generateDummyEvents(50);
     const newEvents = await event_table.getAllRows();
@@ -428,8 +293,8 @@ const AdminScreen = ({ navigation }) => {
       const startMinute = getRandomMinute();
       const endMinute = getRandomMinute();
 
-      const startTime = generateISOTimeString(startHour, startMinute);
-      const endTime = generateISOTimeString(endHour, endMinute);
+      const startTime = removeSecondsFromISOString(generateISOTimeString(startHour, startMinute));
+      const endTime = removeSecondsFromISOString(generateISOTimeString(endHour, endMinute));
 
       const itemToAdd = {
         startTime,
@@ -621,71 +486,36 @@ const AdminScreen = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      <View
-        // style={{
-        //   flex: 1,
-        //   flexDirection: "row",
-        //   justifyContent: "center",
-        //   alignItems: "center",
-        // }}
-      >
+      <View>
         <Button onPress={() => setData(ctx)} shape="pill">
           Show ctx
         </Button>
         <RNPickerSelect
           onValueChange={(itemValue, itemIndex) => {
-            setSelectedTable(table_map[itemValue] ? itemValue : null)
-            table_map[itemValue] ? getAllRows(table_map[itemValue], itemValue) : setData(defaultMsg)
-            
+            setSelectedTable(table_map[itemValue] ? itemValue : null);
+            table_map[itemValue]
+              ? getAllRows(table_map[itemValue], itemValue)
+              : setData(defaultMsg);
           }}
-            items={[
-                { label: 'Settings Table', value: 'settings_table' },
-                { label: 'Interval Table', value: 'interval_table' },
-                { label: 'Hourly Income Table', value: 'hourly_income_table'},
-                { label: 'One Time Income Table', value: 'one_time_income_table' },
-                { label: 'One Time Expense Table', value: 'one_time_expense_table' },
-                { label: 'Settings Table', value: 'settings_table' },
-                { label: 'Event Table', value: 'event_table' },
-                // ... other items
-            ]}
-            style={{ paddingBottom: 10 }}
+          items={[
+            { label: "Settings Table", value: "settings_table" },
+            { label: "Interval Table", value: "interval_table" },
+            { label: "Hourly Income Table", value: "hourly_income_table" },
+            { label: "One Time Income Table", value: "one_time_income_table" },
+            {
+              label: "One Time Expense Table",
+              value: "one_time_expense_table",
+            },
+            { label: "Settings Table", value: "settings_table" },
+            { label: "Event Table", value: "event_table" },
+          ]}
+          style={styles.pickerPaddingBottom}
         />
-        {/* <Picker
-          zIndex: Platform.OS === 'ios' ? 1 : 0
-          selectedValue={selectedTable}
-          style={{ height: 50, width: 200 }}
-          onValueChange={(itemValue, itemIndex) => {
-            setSelectedTable(itemValue)
-            if (table_map[itemValue]) getAllRows(table_map[itemValue], itemValue)
-            
-          }}
-        >
-          <Picker.Item label="Select table" value={null} />
-          <Picker.Item label="Settings Table" value="settings_table" />
-          <Picker.Item
-            label="Hourly Income Table"
-            value="hourly_income_table"
-          />
-          <Picker.Item label="Interval Table" value="interval_table" />
-          <Picker.Item label="Event Table" value="event_table" />
-          <Picker.Item
-            label="One Time Income Table"
-            value="one_time_income_table"
-          />
-          <Picker.Item
-            label="One Time Expense Table"
-            value="one_time_expense_table"
-          />
-        </Picker> */}
       </View>
       {selectedTable && (
         <View>
           <View
-            style={{
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
+            style={styles.flexCenter}
           >
             <Button
               onPress={() =>
@@ -693,7 +523,7 @@ const AdminScreen = ({ navigation }) => {
               }
               shape="pill"
             >
-  Schema
+              Schema
             </Button>
             <Button
               onPress={() =>
@@ -705,11 +535,7 @@ const AdminScreen = ({ navigation }) => {
             </Button>
           </View>
           <View
-            style={{
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
+            style={styles.flexCenter}
           >
             {selectedTable === "hourly_income_table" && (
               <Button
@@ -789,12 +615,7 @@ const AdminScreen = ({ navigation }) => {
             </Button>
           </View>
           <View
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            style={styles.flex1Center}
           >
             <Button
               onPress={() =>
@@ -805,7 +626,7 @@ const AdminScreen = ({ navigation }) => {
               }
               shape="pill"
             >
-              Reinitialize 
+              Reinitialize
             </Button>
             <Button
               onPress={() =>
@@ -816,46 +637,8 @@ const AdminScreen = ({ navigation }) => {
               }
               shape="pill"
             >
-              Drop (delete) 
+              Drop (delete)
             </Button>
-
-            {/* <Modal
-          transparent={true}
-          animationType="slide"
-          visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed.");
-            setModalVisible(!modalVisible);
-          }}
-        >
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                width: 300,
-                padding: 20,
-                backgroundColor: "white",
-                borderRadius: 10,
-              }}
-            >
-              <Text>
-                `Are you sure you want to reinitialize the ${selectedTable}{" "}
-                database?
-              </Text>
-              <Button onPress={handleConfirm} shape="pill">
-                Confirm
-              </Button>
-              <Button onPress={() => setModalVisible(false)} shape="pill">
-                Cancel
-              </Button>
-            </View>
-          </View>
-        </Modal> */}
           </View>
 
           <ConfirmationModal
@@ -879,25 +662,5 @@ const AdminScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
-const styles = StyleSheet.create({
-  scrollViewContent: {
-    // Apply the styles you need for the content inside the scroll view
-    // For example, you might want to add padding or specific alignment
-    padding: 16,
-    paddingBottom: 50, // Add padding at the bottom for better visual spacing
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  settingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  settingLabel: {
-    fontSize: 16,
-  },
-});
+const styles = getAdminScreenStyles();
 export default AdminScreen;

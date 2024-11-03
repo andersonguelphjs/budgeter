@@ -3,6 +3,8 @@ import { useCustomStyles } from "../../hooks/use-custom-style";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import ButtonSwitch from "../ui/ButtonSwitch";
+
+
 import RNPickerSelect from "react-native-picker-select";
 const EventAdd = ({
   styles,
@@ -29,20 +31,29 @@ const EventAdd = ({
   setNote,
   addEvent,
   addButtonDisabled,
+  translation,
+  eventAddedMsg
 }) => {
   const { hourlyIncomes, oneTimeExpenses, oneTimeIncomes } = categories;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const customStyles = useCustomStyles();
+  // "毎時":"毎時",
+  //      "one_time":"1 回",
+  //      "add_expense":"経費を追加",
+  //      "add_income":"収入を追加",
+  //      "select_expense":"1 回限りの経費を選択",
+  //      "select_hourly_income":"時給を選択してください",
+  //      "select_interval":"間隔を選択"
   const buttons = [
     {
-      title: "Hourly",
+      title: translation["hourly"],
       onPress: () => {
         console.log("Button 1 pressed");
         // additional actions
       },
     },
     {
-      title: "One time",
+      title: translation["one_time"],
       onPress: () => {
         console.log("Button 2 pressed");
         // additional actions
@@ -53,7 +64,7 @@ const EventAdd = ({
     setIncomeType(index == 0 ? "hourly" : "one_time");
     setSelectedIndex(index);
   };
-  //console.log("curent ", currentTheme);
+  console.log("ev oneTimeIncome ", oneTimeIncome);
   const hourlyOrOneTimeSwitch = selectedType === "income" && (
     <ButtonSwitch
       currentTheme={currentTheme}
@@ -66,18 +77,21 @@ const EventAdd = ({
   const hourlyPickers = selectedType === "income" && selectedIndex === 0 && (
     <>
       <RNPickerSelect
-        onValueChange={(value) => setHourlyIncome(value)}
-        placeholder={{ label: "Select a Hourly Income", value: null }}
+        onValueChange={(value) =>{
+          console.log("hourlyPickers ", value)
+          setHourlyIncome(value)
+        } }
+        placeholder={{ label: translation["select_hourly_income"], value: null }}
         items={hourlyIncomes.map((cat) => ({
           label: cat.description,
           value: cat.id,
         }))}
         style={customStyles.RNPickerSelectStyle}
-        value={hourlyIncome}
+        value={hourlyIncome || null}
       />
       <RNPickerSelect
         onValueChange={(value) => setInterval(value)}
-        placeholder={{ label: "Select an interval", value: null }}
+        placeholder={{ label: translation["select_interval"], value: null }}
         items={intervals.map((int) => ({
           label: `${getHourMinutes(int.startTime)} - ${getHourMinutes(
             int.endTime
@@ -85,7 +99,7 @@ const EventAdd = ({
           value: int.id,
         }))}
         style={customStyles.RNPickerSelectStyle}
-        value={interval}
+        value={interval || null}
       />
     </>
   );
@@ -93,26 +107,35 @@ const EventAdd = ({
   const oneTimeIncomePicker = selectedType === "income" &&
     selectedIndex === 1 && (
       <RNPickerSelect
-        onValueChange={(value) => setOneTimeIncome(value)}
-        placeholder={{ label: "Select a One Time Income", value: null }}
+        onValueChange={(value) => {
+          console.log("onValueChang ", value);
+          const chosen = oneTimeIncomes.find((cat) => cat.id === value);
+          console.log("chosen ", chosen);
+          setAmount(chosen?.amount || 0);
+          setOneTimeIncome(value);
+        }}
+        placeholder={{ label: translation["select_one_time_income"], value: null }}
         items={oneTimeIncomes.map((cat) => ({
           label: cat.description,
           value: cat.id,
         }))}
         style={customStyles.RNPickerSelectStyle}
-        value={oneTimeIncome}
+        value={oneTimeIncome || null}
       />
     );
 
   const oneTimeExpensePicker = selectedType === "expense" && (
     <RNPickerSelect
       onValueChange={(value) => {
-        console.log(" ", value);
-        setOneTimeExpense(value)
-      } }
+        console.log("onValueChang ", value);
+        const chosen = oneTimeExpenses.find((cat) => cat.id === value);
+        console.log("chosen ", chosen);
+        setAmount(chosen?.amount || 0);
+        setOneTimeExpense(value);
+      }}
       items={[
         {
-          label: "Select a One Time Expense",
+          label: translation["select_expense"],
           value: null,
           color: currentTheme.text || "black",
         },
@@ -123,7 +146,7 @@ const EventAdd = ({
         })),
       ]}
       style={customStyles.RNPickerSelectStyle}
-      value={oneTimeExpense}
+      value={oneTimeExpense || null}
       placeholder={{}}
       useNativeAndroidPickerStyle={false}
     />
@@ -131,7 +154,7 @@ const EventAdd = ({
 
   const amountRow = (
     <View style={styles.horizontalLayout}>
-      <Text style={styles.label}>Amount:</Text>
+      <Text style={styles.label}>{translation["amount"]}</Text>
       <TextInput
         style={styles.input}
         keyboardType="numeric"
@@ -147,7 +170,7 @@ const EventAdd = ({
   const noteInput = (
     <TextInput
       style={[styles.input, styles.multilineInput]}
-      placeholder="Enter note"
+      placeholder={translation["enter_note"]}
       multiline
       value={note}
       numberOfLines={4}
@@ -165,25 +188,24 @@ const EventAdd = ({
           addButtonDisabled ? styles.disabledButtonText : styles.addButtonText
         }
       >
-        Add {selectedType}{" "}
-        {selectedDay?.dateString && ` to ${selectedDay.dateString}`}
+        + {translation[selectedType]}{" "}
+        {selectedDay?.dateString && `(${selectedDay.dateString})`}
       </Text>
     </TouchableOpacity>
   );
+  const msgText = eventAddedMsg && <Text style={styles.addedEventMsg}>{eventAddedMsg}</Text>
   return (
     <View style={styles.addEventContainer}>
+      {msgText}
       {addEventButton}
       {hourlyOrOneTimeSwitch}
       {hourlyPickers}
       {oneTimeIncomePicker}
       {oneTimeExpensePicker}
       {(selectedType === "expense" ||
-        (selectedType === "income" && selectedIndex === 1)) && (
-        <React.Fragment>
-          {amountRow}
-          {noteInput}
-        </React.Fragment>
-      )}
+        (selectedType === "income" && selectedIndex === 1)) &&
+        amountRow}
+      {selectedType === "expense" && noteInput}
     </View>
   );
 };

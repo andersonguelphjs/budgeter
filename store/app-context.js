@@ -1,10 +1,8 @@
 import React, { useReducer, useEffect } from "react";
-import { parseISO, format } from "date-fns";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useState } from "react";
 import useSoundPlayer from "../hooks/use-sound";
 import useSQLLiteDatabase from "../hooks/use-sqllite-database";
-import { FinanceSchema } from "../models/Finance";
 import { SettingsSchema } from "../models/Settings";
 import { HourlyIncomeSchema } from "../models/HourlyIncome";
 import { OneTimeIncomeSchema } from "../models/OneTimeIncome";
@@ -19,10 +17,10 @@ export const AppContext = createContext({
   intervals: [],
   settings: {},
   events: [],
-  themes: {}
+  themes: {},
 });
 const default_settings = {
-  language: "en",
+  language: "ja",
   numberOfLogins: 0,
   lastLogin: new Date().toISOString(),
   creation: new Date().toISOString(),
@@ -31,8 +29,7 @@ const default_settings = {
   notifications: 1,
   currency: "¥",
   history_data: JSON.stringify([]),
-  theme: "LIGHT",
-}
+};
 
 const initialState = {
   categories: {},
@@ -40,36 +37,87 @@ const initialState = {
   events: [],
   settings: {},
   themes: themes,
+  language: "en",
 };
 
 const reducer = (state, action) => {
   // console.log(action)
+  let eventToChange;
+  let newEvents;
   switch (action.type) {
-
     case "UPDATE_ITEMS":
-      return { ...state, ...{ categories: {...state.categories , [action.key]: action.items || []}} };
+      return {
+        ...state,
+        ...{
+          categories: { ...state.categories, [action.key]: action.items || [] },
+        },
+      };
     case "TOGGLE_SOUND":
-      return { ...state, settings: {...state.settings, sound: action.sound || "ON" }};
+      return {
+        ...state,
+        settings: { ...state.settings, sound: action.sound || "ON" },
+      };
     case "TOGGLE_CURRENCY":
-      return { ...state, settings: {...state.settings, currency: action.currency || "¥" }};
+      return {
+        ...state,
+        settings: { ...state.settings, currency: action.currency || "¥" },
+      };
     case "TOGGLE_NOTIFICATIONS":
-      return { ...state, settings: {...state.settings, notifications: action.notifications || "OFF" }};
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          notifications: action.notifications || "OFF",
+        },
+      };
     case "TOGGLE_THEME":
-      return { ...state, settings: {...state.settings, theme:action.theme || "LIGHT"  }};
+      return {
+        ...state,
+        settings: { ...state.settings, theme: action.theme || "LIGHT" },
+      };
     case "UPDATE_INTERVALS":
       return { ...state, intervals: action.intervals || [] };
+    case "UPDATE_EVENT_AMOUNT":
+      eventToChange = {
+        ...state.events.find((event) => event.id === action.id),
+        amount: action.amount,
+      };
+      newEvents = state.events.filter((event) => event.id !== action.id);
+      newEvents.push(eventToChange);
+      return { ...state, events: newEvents };
+    case "UPDATE_EVENT_NOTE":
+      eventToChange = {
+        ...state.events.find((event) => event.id === action.id),
+        note: action.note,
+      };
+      newEvents = state.events.filter((event) => event.id !== action.id);
+      newEvents.push(eventToChange);
+      return { ...state, events: newEvents };
+    case "UPDATE_EVENT_INTERVAL_TIMES":
+      console.log("UPDATE_EVENT_INTERVAL_TIMES ", action);
+      eventToChange = {
+        ...state.events.find((event) => event.id === action.id),
+        startTime: action.startTime,
+        endTime: action.endTime,
+      };
+      newEvents = state.events.filter((event) => event.id !== action.id);
+      newEvents.push(eventToChange);
+      return { ...state, events: newEvents };
     case "UPDATE_EVENTS":
       return { ...state, events: action.events || [] };
     case "INIT_DATA":
       return {
         ...state,
-        categories : action.categories,
+        categories: action.categories,
         intervals: action.intervals,
         settings: action.settings,
         events: action.events,
       };
     case "TOGGLE_LANGUAGE":
-      return { ...state, settings: {...state.settings, language: action.language || "ja" }};
+      return {
+        ...state,
+        settings: { ...state.settings, language: action.language || "ja" },
+      };
 
     case "INCREMENT":
       return { ...state, count: state.count + 1 };
@@ -85,7 +133,6 @@ const reducer = (state, action) => {
 const AppContextProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [authToken, setAuthToken] = useState();
-  const [isDark, setIsDark] = useState(false);
   const { playSound } = useSoundPlayer();
   const { sql_table: settings_table } = useSQLLiteDatabase({
     table: "settings",
@@ -98,16 +145,19 @@ const AppContextProvider = ({ children }) => {
     db_name: "shufu_budgeter",
     desiredSchema: HourlyIncomeSchema,
   });
+
   const { sql_table: one_time_income_table } = useSQLLiteDatabase({
     table: "OneTimeIncome",
     db_name: "shufu_budgeter",
     desiredSchema: OneTimeIncomeSchema,
-  });  
+  });
+
   const { sql_table: one_time_expense_table } = useSQLLiteDatabase({
     table: "OneTimeExpense",
     db_name: "shufu_budgeter",
     desiredSchema: OneTimeExpenseSchema,
-  });  
+  });
+  
   const { sql_table: interval_table } = useSQLLiteDatabase({
     table: "interval",
     db_name: "shufu_budgeter",
@@ -123,7 +173,7 @@ const AppContextProvider = ({ children }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Start both fetch operations concurrently.
+        //console.log("log data ", settings_table)
         const fetchPromises = [
           settings_table.getFirstRow(),
           hourly_income_table.getAllRows(),
@@ -132,20 +182,29 @@ const AppContextProvider = ({ children }) => {
           one_time_income_table.getAllRows(),
           one_time_expense_table.getAllRows(),
         ];
-
+       // console.log("fetchPromises ", fetchPromises)
         // Wait for both promises to complete.
-        const [fetchedSettings, hourlyIncomes, intervals, events, oneTimeIncomes, oneTimeExpenses] = await Promise.all(
-          fetchPromises
-        );
+        const [
+          fetchedSettings,
+          hourlyIncomes,
+          intervals,
+          events,
+          oneTimeIncomes,
+          oneTimeExpenses,
+        ] = await Promise.all(fetchPromises);
+        console.log("all fetched settings ", fetchedSettings)
         let settings = fetchedSettings;
-        if (!settings){
-          console.log("No settings data, will created")
-          const creation_result = await settings_table.createNewRow(default_settings);
-          console.log("created first row: " + creation_result)
-          settings = await settings_table.getFirstRow()
-          console.log("got new settings data: " + settings)
+        console.log("Object.keys(settings).length ", Object.keys(settings).length)
+        if (!settings || Object.keys(settings).length === 0) {
+          console.log("No settings data, will created");
+          const creation_result = await settings_table.createNewRow(
+            default_settings
+          );
+          console.log("created first row: " + creation_result);
+          settings = await settings_table.getFirstRow();
+          console.log("got new settings data: " + settings);
         }
-        
+
         const intervals_dates_cast = intervals.map((r) => {
           return {
             ...r,
@@ -169,34 +228,33 @@ const AppContextProvider = ({ children }) => {
           categories: {
             hourlyIncomes: hourlyIncomes,
             oneTimeIncomes: oneTimeIncomes,
-            oneTimeExpenses: oneTimeExpenses
+            oneTimeExpenses: oneTimeExpenses,
           },
           intervals: intervals_dates_cast,
           events: events,
-
         });
       } catch (error) {
         console.error("There was an error fetching the init data", error);
         // Handle errors, potentially updating state with error information
       }
     };
-
+    console.log("log data")
     loadData();
   }, []); // Empty dependency array means this useEffect runs once when the component mounts
 
-  const authenticate = (token) => {
-    setAuthToken(token);
-    AsyncStorage.setItem("token", token);
-  };
+  // const authenticate = (token) => {
+  //   setAuthToken(token);
+  //   AsyncStorage.setItem("token", token);
+  // };
 
-  const logout = () => {
-    setAuthToken(null);
-    AsyncStorage.removeItem("token");
-  };
+  // const logout = () => {
+  //   setAuthToken(null);
+  //   AsyncStorage.removeItem("token");
+  // };
 
-  const playSoundFile = (e, index = null) => {
-    playSound(index);
-  };
+  // const playSoundFile = (e, index = null) => {
+  //   playSound(index);
+  // };
 
   const value = {
     tables: {
@@ -205,12 +263,12 @@ const AppContextProvider = ({ children }) => {
       one_time_income_table: one_time_income_table,
       one_time_expense_table: one_time_expense_table,
       interval_table: interval_table,
-      settings_table: settings_table, 
+      settings_table: settings_table,
     },
     state: state,
     dispatch: dispatch,
-    translation : translation,
-    playSoundFile : playSound
+    translation: translation,
+    playSoundFile: playSound,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

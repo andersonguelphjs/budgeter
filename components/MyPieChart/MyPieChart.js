@@ -2,28 +2,7 @@ import React from "react";
 import { View, Dimensions, StyleSheet, Text } from "react-native";
 import { PieChart } from "react-native-chart-kit";
 
-const MyPieChart = ({ tableData }) => {
-  const aggregatedData = {};
-  tableData.forEach((item) => {
-    const description = item.category_description;
-
-    if (aggregatedData[description]) {
-      // If the description already exists, add the total to the existing amount
-      aggregatedData[description].total += item.total;
-    } else {
-      // If it's a new description, create a new entry in the aggregatedData
-      aggregatedData[description] = {
-        ...item, // copying other properties like color, etc.
-        total: item.total,
-      };
-    }
-  });
-
-  // Now convert the aggregated data back to an array and calculate the sum of all totals
-  const aggregatedArray = Object.values(aggregatedData);
-  const totalSum = aggregatedArray.reduce((acc, item) => acc + item.total, 0);
-
-  // Prepare data for the pie chart, ensuring even distribution if total is 0
+const MyPieChart = ({ aggregatedArray =[], totalSum=0 , translation}) => {
   const chartData = aggregatedArray.map((item) => {
     const value = totalSum === 0 ? 1 : item.total; // if total is 0, each slice is of equal size
 
@@ -65,7 +44,7 @@ const MyPieChart = ({ tableData }) => {
 
   return (
     <View style={styles.chartContainer}>
-      <Text style={styles.chartTitle}>Total: {totalSum}</Text>
+      <Text style={styles.chartTitle}>{translation["Total"]} {totalSum}</Text>
 
       <PieChart
         data={chartData}
